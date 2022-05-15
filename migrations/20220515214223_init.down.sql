@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS purchases;
+
+DROP TABLE IF EXISTS products;
+
+DROP TABLE IF EXISTS recipes;
+
+DROP TABLE IF EXISTS workouts;
