@@ -2,8 +2,6 @@ package entity
 
 import "time"
 
-type ShoppingList []Purchase
-
 type Purchase struct {
 	Id          uint
 	Name        string

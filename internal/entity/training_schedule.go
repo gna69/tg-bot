@@ -2,7 +2,8 @@ package entity
 
 import "time"
 
-type TrainingSchedule struct {
+type Workout struct {
+	Id          uint
 	PaymentDate time.Time
 	EndDate     time.Time
 	Remains     uint8
