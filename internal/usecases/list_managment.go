@@ -1,12 +1,15 @@
 package usecases
 
-import "github.com/gna69/tg-bot/internal/entity"
+import (
+	"context"
+	"github.com/gna69/tg-bot/internal/entity"
+)
 
 type ShoppingManagement interface {
-	AddPurchase(purchase *entity.Purchase) error
-	UpdatePurchase(newPurchase *entity.Purchase) error
-	DeletePurchase(id uint) error
-	GetPurchases() []entity.Purchase
+	AddPurchase(ctx context.Context, purchase *entity.Purchase) error
+	UpdatePurchase(ctx context.Context, newPurchase *entity.Purchase) error
+	DeletePurchase(ctx context.Context, id uint) error
+	GetPurchases(ctx context.Context) []entity.Purchase
 }
 
 type ProductsManagement interface {

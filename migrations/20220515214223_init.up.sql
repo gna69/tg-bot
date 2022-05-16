@@ -13,7 +13,7 @@ CREATE TABLE products
 (
     id          SERIAL PRIMARY KEY,
     "name"      VARCHAR(255),
-    total_count INTEGER,
+    total_count INTEGER
 );
 
 CREATE TABLE recipes
@@ -23,7 +23,7 @@ CREATE TABLE recipes
     description TEXT,
     ingredients TEXT,
     actions     TEXT,
-    Complexity  INTEGER,
+    Complexity  INTEGER
 );
 
 CREATE TABLE workouts
@@ -31,5 +31,5 @@ CREATE TABLE workouts
     id           SERIAL PRIMARY KEY,
     payment_date TIMESTAMP,
     end_date     TIMESTAMP,
-    Remains      INTEGER,
+    Remains      INTEGER
 );
