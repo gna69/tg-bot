@@ -6,15 +6,13 @@ import (
 	"reflect"
 )
 
-const (
-	DefaultOffset  = 0
-	DefaultTimeout = 60
-	WelcomeMessage = `Привет, я твой бот помощник по дому.
-Я помогу тебе вести свой список покупок, продуктов, рецептов и тренировок.`
-)
-
 type TgBot struct {
-	api *tgbotapi.BotAPI
+	api         *tgbotapi.BotAPI
+	enabled     bool
+	currentMode string
+}
+
+type modeStatus struct {
 }
 
 func NewTelegramBot(token string) (*TgBot, error) {
@@ -23,28 +21,41 @@ func NewTelegramBot(token string) (*TgBot, error) {
 		return nil, err
 	}
 
-	return &TgBot{api: api}, nil
+	return &TgBot{
+		api:         api,
+		enabled:     false,
+		currentMode: Stop,
+	}, nil
 }
 
 func (bot *TgBot) Run() error {
-	chat, err := bot.getChat()
+	chatCh, err := bot.getChat()
 	if err != nil {
 		return usecases.ErrGetChat
 	}
 
-	for message := range *chat {
+	for message := range chatCh {
 		if message.Message == nil {
 			continue
 		}
 
-		if bot.string(message.Message.Text) {
+		if bot.isTextMessage(message.Message.Text) {
+			chat := message.Message.Chat
 			switch message.Message.Text {
-			case "/start":
-				bot.sendMessage(message.Message.Chat.ID, WelcomeMessage)
-			case "/shopping":
-
+			case Start:
+				bot.start(chat)
+			case Shopping:
+				bot.shoppingMode(chat)
+			case Products:
+				bot.productsMode(chat)
+			case Recipes:
+				bot.recipesMode(chat)
+			case Workouts:
+				bot.workoutsMode(chat)
+			case Stop:
+				bot.stop(chat)
 			default:
-
+				bot.handle(message.Message)
 			}
 		}
 	}
@@ -52,7 +63,7 @@ func (bot *TgBot) Run() error {
 	return nil
 }
 
-func (bot *TgBot) getChat() (*tgbotapi.UpdatesChannel, error) {
+func (bot *TgBot) getChat() (tgbotapi.UpdatesChannel, error) {
 	chatSettings := tgbotapi.NewUpdate(DefaultOffset)
 	chatSettings.Timeout = DefaultTimeout
 
@@ -61,13 +72,13 @@ func (bot *TgBot) getChat() (*tgbotapi.UpdatesChannel, error) {
 		return nil, err
 	}
 
-	return &chat, nil
+	return chat, nil
 }
 
 func (bot *TgBot) sendMessage(chatId int64, msg string) {
 	_, _ = bot.api.Send(tgbotapi.NewMessage(chatId, msg))
 }
 
-func (bot *TgBot) string(input interface{}) bool {
+func (bot *TgBot) isTextMessage(input interface{}) bool {
 	return reflect.TypeOf(input).Kind() == reflect.String && input.(string) != ""
 }

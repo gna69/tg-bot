@@ -9,7 +9,7 @@ import (
 func main() {
 	tgBot, err := tg_bot.NewTelegramBot(cfg.BotToken)
 	if err != nil {
-		log.Fatal("Can't create telegram bot")
+		log.Fatal("Can't create telegram bot: ", err.Error())
 	}
 
 	srv := server.New()
