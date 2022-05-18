@@ -19,6 +19,34 @@ const (
 	Delete
 )
 
+type addedInfo uint8
+
+const (
+	Waited addedInfo = iota
+	Name
+	Description
+	Count
+	Unit
+	Price
+	End
+)
+
+func AddedInfoMessage(info addedInfo) string {
+	switch info {
+	case Name:
+		return "Введите название"
+	case Description:
+		return "Введите описание"
+	case Count:
+		return "Введите количество"
+	case Unit:
+		return "Введите единицу измерения количества"
+	case Price:
+		return "Введите цену"
+	}
+	return ""
+}
+
 const (
 	DefaultOffset  = 0
 	DefaultTimeout = 60

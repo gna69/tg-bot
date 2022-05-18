@@ -2,10 +2,11 @@ package tg_bot
 
 import (
 	"context"
-	"github.com/gna69/tg-bot/internal/adapters/pg"
 	"reflect"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
+	"github.com/gna69/tg-bot/internal/adapters/pg"
+	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/gna69/tg-bot/internal/usecases"
 )
 
@@ -18,7 +19,9 @@ type TgBot struct {
 }
 
 type modeContext struct {
-	operation operation
+	operation      operation
+	additionalInfo addedInfo
+	purchase       *entity.Purchase
 }
 
 func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
@@ -34,6 +37,7 @@ func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
 		mode:    Stop,
 		context: modeContext{
 			operation: Nothing,
+			purchase:  &entity.Purchase{},
 		},
 	}, nil
 }

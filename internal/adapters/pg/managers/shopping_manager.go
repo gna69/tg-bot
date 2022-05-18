@@ -17,7 +17,7 @@ func NewShoppingManager(conn *pgx.Conn) *ShoppingManager {
 
 func (sm *ShoppingManager) AddPurchase(ctx context.Context, purchase *entity.Purchase) error {
 	query := `INSERT INTO purchases (name, description, count, unit, price, created_at) VALUES ($1, $2, $3, $4, $5, to_timestamp($6));`
-	_, err := sm.conn.Exec(ctx, query, purchase.Name, purchase.Description, purchase.Count, purchase.Unit, purchase.Price, purchase.CreatedAt)
+	_, err := sm.conn.Exec(ctx, query, purchase.Name, purchase.Description, purchase.Count, purchase.Unit, purchase.Price, purchase.CreatedAt.Unix())
 	if err != nil {
 		return err
 	}
