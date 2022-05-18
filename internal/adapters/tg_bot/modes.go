@@ -41,6 +41,6 @@ func (bot *TgBot) changeMode(mode string, message string, chat *tgbotapi.Chat) {
 		bot.sendMessage(chat.ID, AboutDisable)
 		return
 	}
-	bot.currentMode = mode
+	bot.mode = mode
 	bot.sendMessage(chat.ID, message)
 }

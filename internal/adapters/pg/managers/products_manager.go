@@ -7,11 +7,11 @@ import (
 )
 
 type ProductsManager struct {
-	Conn *pgx.Conn
+	conn *pgx.Conn
 }
 
 func NewProductsManager(conn *pgx.Conn) *ProductsManager {
-	return &ProductsManager{Conn: conn}
+	return &ProductsManager{conn: conn}
 }
 
 func (pm *ProductsManager) AddProduct(product *entity.Product) error {

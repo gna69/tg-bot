@@ -2,8 +2,8 @@ package managers
 
 import (
 	"context"
+	"fmt"
 	"github.com/gna69/tg-bot/internal/entity"
-
 	"github.com/jackc/pgx/v4"
 )
 
@@ -44,4 +44,16 @@ func (sm *ShoppingManager) DeletePurchase(ctx context.Context, id uint) error {
 
 func (sm *ShoppingManager) GetPurchases(ctx context.Context) []entity.Purchase {
 	return nil
+}
+
+func (sm *ShoppingManager) String(purchases []entity.Purchase) string {
+	list := ""
+	for _, purchase := range purchases {
+		list += fmt.Sprintf("\n%d) %s %d %s %d руб.", purchase.Id, purchase.Name, purchase.Count, purchase.Unit, purchase.Price)
+		if len(purchase.Description) != 0 {
+			list += fmt.Sprintf("\n%s", purchase.Description)
+		}
+		list += fmt.Sprintf("\n%s\n", purchase.CreatedAt.Format("15:04 02:January:2006"))
+	}
+	return list
 }

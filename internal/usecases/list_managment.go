@@ -5,6 +5,10 @@ import (
 	"github.com/gna69/tg-bot/internal/entity"
 )
 
+var (
+	EmptyList = "Этот список пустой, сначала добавь в него что-нибудь!"
+)
+
 type ShoppingManagement interface {
 	AddPurchase(ctx context.Context, purchase *entity.Purchase) error
 	UpdatePurchase(ctx context.Context, newPurchase *entity.Purchase) error

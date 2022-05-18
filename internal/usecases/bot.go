@@ -1,11 +1,15 @@
 package usecases
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 var (
-	ErrGetChat = errors.New("cant get bot chat")
+	ErrGetChat  = errors.New("cant get bot chat")
+	ErrNoOption = errors.New("Такой опции у меня нет!")
 )
 
 type Bot interface {
-	Run() error
+	Run(ctx context.Context) error
 }

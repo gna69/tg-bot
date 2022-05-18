@@ -9,6 +9,16 @@ const (
 	Stop     = "/stop"
 )
 
+type operation uint8
+
+const (
+	Nothing operation = iota
+	ShowAll
+	Add
+	Change
+	Delete
+)
+
 const (
 	DefaultOffset  = 0
 	DefaultTimeout = 60

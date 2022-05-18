@@ -1,34 +1,44 @@
 package tg_bot
 
 import (
+	"context"
+	"github.com/gna69/tg-bot/internal/adapters/pg"
+	"reflect"
+
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"github.com/gna69/tg-bot/internal/usecases"
-	"reflect"
 )
 
 type TgBot struct {
-	api         *tgbotapi.BotAPI
-	enabled     bool
-	currentMode string
+	api     *tgbotapi.BotAPI
+	db      *pg.PostgresClient
+	enabled bool
+	mode    string
+	context modeContext
 }
 
-type modeStatus struct {
+type modeContext struct {
+	operation operation
 }
 
-func NewTelegramBot(token string) (*TgBot, error) {
+func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
 	api, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return nil, err
 	}
 
 	return &TgBot{
-		api:         api,
-		enabled:     false,
-		currentMode: Stop,
+		api:     api,
+		db:      db,
+		enabled: false,
+		mode:    Stop,
+		context: modeContext{
+			operation: Nothing,
+		},
 	}, nil
 }
 
-func (bot *TgBot) Run() error {
+func (bot *TgBot) Run(ctx context.Context) error {
 	chatCh, err := bot.getChat()
 	if err != nil {
 		return usecases.ErrGetChat
@@ -55,7 +65,7 @@ func (bot *TgBot) Run() error {
 			case Stop:
 				bot.stop(chat)
 			default:
-				bot.handle(message.Message)
+				bot.handle(ctx, message.Message)
 			}
 		}
 	}
