@@ -43,17 +43,43 @@ func (sm *ShoppingManager) DeletePurchase(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (sm *ShoppingManager) GetPurchases(ctx context.Context) ([]entity.Purchase, error) {
+func (sm *ShoppingManager) GetPurchase(ctx context.Context, id uint) (*entity.Purchase, error) {
+	query := `SELECT * FROM purchases WHERE id=$1;`
+	purchase := &entity.Purchase{}
+
+	row := sm.conn.QueryRow(ctx, query, id)
+	err := row.Scan(
+		&purchase.Id,
+		&purchase.Name,
+		&purchase.Description,
+		&purchase.Count,
+		&purchase.Unit,
+		&purchase.Price,
+		&purchase.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return purchase, nil
+}
+
+func (sm *ShoppingManager) GetPurchases(ctx context.Context) ([]*entity.Purchase, error) {
 	query := `SELECT * FROM purchases;`
-	row := sm.conn.QueryRow(ctx, query)
-	purchases, err := toPurchasesList(row)
+	rows, err := sm.conn.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	purchases, err := toPurchasesList(rows)
 	if err != nil {
 		return nil, err
 	}
 	return purchases, nil
 }
 
-func (sm *ShoppingManager) String(purchases []entity.Purchase) string {
+func (sm *ShoppingManager) String(purchases []*entity.Purchase) string {
 	list := ""
 	for _, purchase := range purchases {
 		list += fmt.Sprintf("\n%d) %s %d %s %d руб.", purchase.Id, purchase.Name, purchase.Count, purchase.Unit, purchase.Price)

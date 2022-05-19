@@ -3,38 +3,28 @@ package managers
 import (
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/jackc/pgx/v4"
-	"time"
 )
 
-func toPurchasesList(rows pgx.Row) ([]entity.Purchase, error) {
-	var id uint
-	var count uint8
-	var price uint64
-	var name, description, unit string
-	var createdAt time.Time
-
+func toPurchasesList(rows pgx.Rows) ([]*entity.Purchase, error) {
 	var err error
-	var purchases []entity.Purchase
-	for {
-		err = rows.Scan(&id, &name, &description, &count, &unit, &price, &createdAt)
+	var purchases []*entity.Purchase
 
-		if err == pgx.ErrNoRows {
-			break
-		}
-
+	for rows.Next() {
+		var purchase entity.Purchase
+		err = rows.Scan(
+			&purchase.Id,
+			&purchase.Name,
+			&purchase.Description,
+			&purchase.Count,
+			&purchase.Unit,
+			&purchase.Price,
+			&purchase.CreatedAt,
+		)
 		if err != nil {
 			return nil, err
 		}
 
-		purchases = append(purchases, entity.Purchase{
-			Id:          id,
-			Count:       count,
-			Price:       price,
-			Name:        name,
-			Description: description,
-			Unit:        unit,
-			CreatedAt:   createdAt,
-		})
+		purchases = append(purchases, &purchase)
 	}
 
 	return purchases, nil

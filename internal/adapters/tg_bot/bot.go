@@ -21,6 +21,7 @@ type TgBot struct {
 type modeContext struct {
 	operation      operation
 	updating       bool
+	updatingObjId  uint
 	additionalInfo addedInfo
 	purchase       *entity.Purchase
 }
@@ -39,6 +40,7 @@ func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
 		context: modeContext{
 			operation:      Nothing,
 			updating:       false,
+			updatingObjId:  0,
 			additionalInfo: Waited,
 			purchase:       &entity.Purchase{},
 		},

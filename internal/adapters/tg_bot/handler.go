@@ -39,10 +39,24 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		}
 
 		bot.sendMessage(message.Chat.ID, AddedInfoMessage(bot.context.additionalInfo))
+		bot.context.operation = Nothing
 	case Change:
 		if !bot.context.updating {
-			bot.sendMessage(message.Chat.ID, UpdatingList)
+			bot.sendMessage(message.Chat.ID, "Что будем изменять?(просто пришли номер)")
+			bot.sendMessage(message.Chat.ID, bot.showAll(ctx))
 			bot.context.updating = true
+			return
+		}
+
+		if bot.context.updatingObjId == 0 {
+			// todo: better error
+			objId, err := strconv.Atoi(message.Text)
+			if err != nil {
+				bot.sendMessage(message.Chat.ID, err.Error())
+				return
+			}
+			bot.context.updatingObjId = uint(objId)
+			bot.sendMessage(message.Chat.ID, UpdatingList)
 			return
 		}
 
@@ -62,6 +76,7 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 			return
 		}
 
+		bot.context.operation = Nothing
 	case Delete:
 	default:
 		bot.sendMessage(message.Chat.ID, usecases.ErrNoOption.Error())
@@ -123,7 +138,13 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
 	switch bot.mode {
 	case Shopping:
-		err := bot.setInfo(message.Text)
+		purchase, err := bot.db.ShoppingManager.GetPurchase(ctx, bot.context.updatingObjId)
+		if err != nil {
+			return err
+		}
+		bot.context.purchase = purchase
+
+		err = bot.setInfo(message.Text)
 		if err != nil {
 			return err
 		}
