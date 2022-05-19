@@ -13,7 +13,7 @@ type ShoppingManagement interface {
 	AddPurchase(ctx context.Context, purchase *entity.Purchase) error
 	UpdatePurchase(ctx context.Context, newPurchase *entity.Purchase) error
 	DeletePurchase(ctx context.Context, id uint) error
-	GetPurchases(ctx context.Context) []entity.Purchase
+	GetPurchases(ctx context.Context) ([]entity.Purchase, error)
 }
 
 type ProductsManagement interface {

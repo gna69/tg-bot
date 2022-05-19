@@ -3,6 +3,7 @@ package managers
 import (
 	"context"
 	"fmt"
+
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/jackc/pgx/v4"
 )
@@ -25,8 +26,8 @@ func (sm *ShoppingManager) AddPurchase(ctx context.Context, purchase *entity.Pur
 }
 
 func (sm *ShoppingManager) UpdatePurchase(ctx context.Context, newPurchase *entity.Purchase) error {
-	query := `UPDATE purchases SET name=$1, description=$2, count=$3, unit=$4, price=$5, created_at=to_timestamp($6) WHERE id=$7;`
-	_, err := sm.conn.Exec(ctx, query, newPurchase.Name, newPurchase.Description, newPurchase.Count, newPurchase.Unit, newPurchase.Price, newPurchase.CreatedAt, newPurchase.Id)
+	query := `UPDATE purchases SET name=$1, description=$2, count=$3, unit=$4, price=$5 WHERE id=$6;`
+	_, err := sm.conn.Exec(ctx, query, newPurchase.Name, newPurchase.Description, newPurchase.Count, newPurchase.Unit, newPurchase.Price, newPurchase.Id)
 	if err != nil {
 		return err
 	}
@@ -42,8 +43,14 @@ func (sm *ShoppingManager) DeletePurchase(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (sm *ShoppingManager) GetPurchases(ctx context.Context) []entity.Purchase {
-	return nil
+func (sm *ShoppingManager) GetPurchases(ctx context.Context) ([]entity.Purchase, error) {
+	query := `SELECT * FROM purchases;`
+	row := sm.conn.QueryRow(ctx, query)
+	purchases, err := toPurchasesList(row)
+	if err != nil {
+		return nil, err
+	}
+	return purchases, nil
 }
 
 func (sm *ShoppingManager) String(purchases []entity.Purchase) string {
