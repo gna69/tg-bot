@@ -19,6 +19,7 @@ func (bot *TgBot) enableChangesMode(ctx context.Context, infoMsg string, chat *t
 
 func (bot *TgBot) disableChangesMode() {
 	bot.context.action = Nothing
+	bot.context.step = Waited
 	bot.context.changes = false
 	bot.context.objectId = 0
 }

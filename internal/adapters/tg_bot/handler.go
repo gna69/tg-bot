@@ -15,41 +15,43 @@ import (
 const (
 	updatingInfo = "Что будем изменять?(просто пришли номер)"
 	deletingInfo = "Что будем удалять?(просто пришли номер)"
+	successInfo  = "Все прошло отлично, если что-то еще нужно сделать, выбери команду в меню!"
 )
 
 func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
+	chatId := message.Chat.ID
+
 	if !bot.enabled {
-		bot.sendMessage(message.Chat.ID, AboutDisable)
+		bot.sendMessage(chatId, AboutDisable)
 		return
 	}
 
 	if bot.context.action == Nothing {
 		err := bot.setAction(message)
 		if err != nil {
-			bot.sendMessage(message.Chat.ID, err.Error())
+			bot.sendMessage(chatId, err.Error())
 			return
 		}
 	}
 
 	switch bot.context.action {
 	case ShowAll:
-		bot.sendMessage(message.Chat.ID, bot.showAll(ctx))
+		bot.sendMessage(chatId, bot.showAll(ctx))
 		bot.context.action = Nothing
 	case Add:
 		if bot.context.step == Waited {
 			bot.context.step = Name
-			bot.sendMessage(message.Chat.ID, StepInfoMessage(bot.context.step))
+			bot.sendMessage(chatId, StepInfoMessage(bot.context.step))
 			return
 		}
 
 		err := bot.add(ctx, message.Text)
 		if err != nil {
-			bot.sendMessage(message.Chat.ID, err.Error())
+			bot.sendMessage(chatId, err.Error())
 			return
 		}
 
-		bot.sendMessage(message.Chat.ID, StepInfoMessage(bot.context.step))
-
+		bot.sendMessage(chatId, StepInfoMessage(bot.context.step))
 	case Change:
 		if !bot.enableChangesMode(ctx, updatingInfo, message.Chat) {
 			return
@@ -63,7 +65,7 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 
 		err := bot.update(ctx, message)
 		if err != nil {
-			bot.sendMessage(message.Chat.ID, err.Error())
+			bot.sendMessage(chatId, err.Error())
 			return
 		}
 
@@ -75,14 +77,18 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 
 		err := bot.delete(ctx, message)
 		if err != nil {
-			bot.sendMessage(message.Chat.ID, err.Error())
+			bot.sendMessage(chatId, err.Error())
 		}
 
 		bot.disableChangesMode()
 	default:
-		bot.sendMessage(message.Chat.ID, usecases.ErrNoOption.Error())
+		bot.sendMessage(chatId, usecases.ErrNoOption.Error())
+		return
 	}
 
+	if bot.context.step == Waited {
+		bot.sendMessage(chatId, successInfo)
+	}
 }
 
 func (bot *TgBot) setAction(message *tgbotapi.Message) error {
