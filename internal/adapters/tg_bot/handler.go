@@ -12,23 +12,33 @@ import (
 	"github.com/gna69/tg-bot/internal/usecases"
 )
 
+const (
+	updatingInfo = "Что будем изменять?(просто пришли номер)"
+	deletingInfo = "Что будем удалять?(просто пришли номер)"
+)
+
 func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
-	if bot.context.operation == Nothing {
-		err := bot.setOperation(message)
+	if !bot.enabled {
+		bot.sendMessage(message.Chat.ID, AboutDisable)
+		return
+	}
+
+	if bot.context.action == Nothing {
+		err := bot.setAction(message)
 		if err != nil {
 			bot.sendMessage(message.Chat.ID, err.Error())
 			return
 		}
 	}
 
-	switch bot.context.operation {
+	switch bot.context.action {
 	case ShowAll:
 		bot.sendMessage(message.Chat.ID, bot.showAll(ctx))
-		bot.context.operation = Nothing
+		bot.context.action = Nothing
 	case Add:
-		if bot.context.additionalInfo == Waited {
-			bot.context.additionalInfo = Name
-			bot.sendMessage(message.Chat.ID, AddedInfoMessage(bot.context.additionalInfo))
+		if bot.context.step == Waited {
+			bot.context.step = Name
+			bot.sendMessage(message.Chat.ID, StepInfoMessage(bot.context.step))
 			return
 		}
 
@@ -38,35 +48,16 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 			return
 		}
 
-		bot.sendMessage(message.Chat.ID, AddedInfoMessage(bot.context.additionalInfo))
-		bot.context.operation = Nothing
+		bot.sendMessage(message.Chat.ID, StepInfoMessage(bot.context.step))
+
 	case Change:
-		if !bot.context.updating {
-			bot.sendMessage(message.Chat.ID, "Что будем изменять?(просто пришли номер)")
-			bot.sendMessage(message.Chat.ID, bot.showAll(ctx))
-			bot.context.updating = true
+		if !bot.enableChangesMode(ctx, updatingInfo, message.Chat) {
 			return
 		}
-
-		if bot.context.objectId == 0 {
-			// todo: better error
-			objId, err := strconv.Atoi(message.Text)
-			if err != nil {
-				bot.sendMessage(message.Chat.ID, err.Error())
-				return
-			}
-			bot.context.objectId = uint(objId)
-			bot.sendMessage(message.Chat.ID, UpdatingList)
+		if !bot.setObjectId(message) {
 			return
 		}
-
-		if bot.context.additionalInfo == Waited {
-			err := bot.setUpdateInfo(message.Text)
-			if err != nil {
-				bot.sendMessage(message.Chat.ID, err.Error())
-				return
-			}
-			bot.sendMessage(message.Chat.ID, AddedInfoMessage(bot.context.additionalInfo))
+		if !bot.setUpdatedStep(message) {
 			return
 		}
 
@@ -76,14 +67,9 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 			return
 		}
 
-		bot.context.operation = Nothing
-		bot.context.updating = false
-		bot.context.objectId = 0
+		bot.disableChangesMode()
 	case Delete:
-		if !bot.context.deleting {
-			bot.sendMessage(message.Chat.ID, "Что будем удалять?(просто пришли номер)")
-			bot.sendMessage(message.Chat.ID, bot.showAll(ctx))
-			bot.context.deleting = true
+		if !bot.enableChangesMode(ctx, deletingInfo, message.Chat) {
 			return
 		}
 
@@ -91,22 +77,21 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		if err != nil {
 			bot.sendMessage(message.Chat.ID, err.Error())
 		}
-		bot.context.operation = Nothing
-		bot.context.deleting = false
-		bot.context.objectId = 0
 
+		bot.disableChangesMode()
 	default:
 		bot.sendMessage(message.Chat.ID, usecases.ErrNoOption.Error())
 	}
 
 }
 
-func (bot *TgBot) setOperation(message *tgbotapi.Message) error {
-	op, err := strconv.Atoi(strings.ReplaceAll(message.Text, ".", ""))
+func (bot *TgBot) setAction(message *tgbotapi.Message) error {
+	newAction, err := strconv.Atoi(strings.ReplaceAll(message.Text, ".", ""))
 	if err != nil {
 		return usecases.ErrNoOption
 	}
-	bot.context.operation = operation(op)
+
+	bot.context.action = action(newAction)
 	return nil
 }
 
@@ -136,7 +121,7 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 		}
 	}
 
-	if bot.context.additionalInfo == End {
+	if bot.context.step == End {
 		switch bot.mode {
 		case Shopping:
 			err := bot.db.ShoppingManager.AddPurchase(ctx, bot.context.purchase)
@@ -146,7 +131,8 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 			bot.context.purchase = &entity.Purchase{}
 		}
 
-		bot.context.additionalInfo = Waited
+		bot.context.step = Waited
+		bot.context.action = Nothing
 	}
 
 	return nil
@@ -197,17 +183,17 @@ func (bot *TgBot) setUpdateInfo(message string) error {
 		return errors.New("Я не знаю таких данных, какие нужно изменить-то?")
 	}
 
-	switch addedInfo(updatingInfo) {
+	switch step(updatingInfo) {
 	case Name:
-		bot.context.additionalInfo = Name
+		bot.context.step = Name
 	case Description:
-		bot.context.additionalInfo = Description
+		bot.context.step = Description
 	case Count:
-		bot.context.additionalInfo = Count
+		bot.context.step = Count
 	case Unit:
-		bot.context.additionalInfo = Unit
+		bot.context.step = Unit
 	case Price:
-		bot.context.additionalInfo = Price
+		bot.context.step = Price
 	default:
 		return errors.New("Я не знаю таких данных, какие нужно изменить-то?")
 	}
@@ -215,26 +201,26 @@ func (bot *TgBot) setUpdateInfo(message string) error {
 }
 
 func (bot *TgBot) setInfo(value string) error {
-	switch bot.context.additionalInfo {
+	switch bot.context.step {
 	case Name:
 		if value == "" {
 			return errors.New("не смог получить название, напиши еще разочек, пожалуйста")
 		}
 		bot.context.purchase.Name = value
-		bot.context.additionalInfo = Count
+		bot.context.step = Count
 	case Count:
 		count, err := strconv.Atoi(value)
 		if err != nil {
 			return errors.New("Я не разобрался, подскажи, пожалуйста, какое количество необходимо?")
 		}
 		bot.context.purchase.Count = uint8(count)
-		bot.context.additionalInfo = Description
+		bot.context.step = Description
 	case Description:
 		bot.context.purchase.Description = value
-		bot.context.additionalInfo = Unit
+		bot.context.step = Unit
 	case Unit:
 		bot.context.purchase.Unit = value
-		bot.context.additionalInfo = Price
+		bot.context.step = Price
 	case Price:
 		price, err := strconv.Atoi(strings.ReplaceAll(value, " ", ""))
 		if err != nil {
@@ -242,7 +228,7 @@ func (bot *TgBot) setInfo(value string) error {
 		}
 		bot.context.purchase.Price = uint64(price)
 		bot.context.purchase.CreatedAt = time.Now()
-		bot.context.additionalInfo = End
+		bot.context.step = End
 	}
 	return nil
 }

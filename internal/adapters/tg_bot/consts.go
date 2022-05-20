@@ -9,20 +9,20 @@ const (
 	Stop     = "/stop"
 )
 
-type operation uint8
+type action uint8
 
 const (
-	Nothing operation = iota
+	Nothing action = iota
 	ShowAll
 	Add
 	Change
 	Delete
 )
 
-type addedInfo uint8
+type step uint8
 
 const (
-	Waited addedInfo = iota
+	Waited step = iota
 	Name
 	Description
 	Count
@@ -31,7 +31,7 @@ const (
 	End
 )
 
-func AddedInfoMessage(info addedInfo) string {
+func StepInfoMessage(info step) string {
 	switch info {
 	case Name:
 		return "Введите название"

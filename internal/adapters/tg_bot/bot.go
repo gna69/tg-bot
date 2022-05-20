@@ -11,20 +11,27 @@ import (
 )
 
 type TgBot struct {
-	api     *tgbotapi.BotAPI
-	db      *pg.PostgresClient
-	enabled bool
-	mode    string
-	context modeContext
+	api      *tgbotapi.BotAPI
+	db       *pg.PostgresClient
+	enabled  bool
+	mode     string
+	context  modeContext
+	entities entities
 }
 
 type modeContext struct {
-	operation      operation
-	updating       bool
-	deleting       bool
-	objectId       uint
-	additionalInfo addedInfo
-	purchase       *entity.Purchase
+	action   action
+	changes  bool
+	objectId uint
+	step     step
+	purchase *entity.Purchase
+}
+
+type entities struct {
+	purchase *entity.Purchase
+	product  *entity.Product
+	recipe   *entity.Recipe
+	workout  *entity.Workout
 }
 
 func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
@@ -39,11 +46,11 @@ func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
 		enabled: false,
 		mode:    Stop,
 		context: modeContext{
-			operation:      Nothing,
-			updating:       false,
-			objectId:       0,
-			additionalInfo: Waited,
-			purchase:       &entity.Purchase{},
+			action:   Nothing,
+			changes:  false,
+			objectId: 0,
+			step:     Waited,
+			purchase: &entity.Purchase{},
 		},
 	}, nil
 }
