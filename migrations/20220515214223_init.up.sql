@@ -4,7 +4,7 @@ CREATE TABLE purchases
     "name"      VARCHAR(255),
     description TEXT,
     "count"     INTEGER,
-    unit        VARCHAR(4),
+    unit        VARCHAR(255),
     price       INTEGER,
     created_at  TIMESTAMP
 );

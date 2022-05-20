@@ -21,12 +21,12 @@ const (
 func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 
-	if !bot.enabled {
+	if !bot.isEnabled() {
 		bot.sendMessage(chatId, AboutDisable)
 		return
 	}
 
-	if bot.context.action == Nothing {
+	if bot.context.action == entity.Nothing {
 		err := bot.setAction(message)
 		if err != nil {
 			bot.sendMessage(chatId, err.Error())
@@ -35,13 +35,13 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 	}
 
 	switch bot.context.action {
-	case ShowAll:
+	case entity.ShowAll:
 		bot.sendMessage(chatId, bot.showAll(ctx))
-		bot.context.action = Nothing
-	case Add:
-		if bot.context.step == Waited {
-			bot.context.step = Name
-			bot.sendMessage(chatId, StepInfoMessage(bot.context.step))
+		bot.context.action = entity.Nothing
+	case entity.Add:
+		if bot.stepper.CurrentStep() == entity.Waited {
+			bot.stepper.NextStep()
+			bot.sendMessage(chatId, bot.stepper.StepInfo())
 			return
 		}
 
@@ -51,8 +51,8 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 			return
 		}
 
-		bot.sendMessage(chatId, StepInfoMessage(bot.context.step))
-	case Change:
+		bot.sendMessage(chatId, bot.stepper.StepInfo())
+	case entity.Change:
 		if !bot.enableChangesMode(ctx, updatingInfo, message.Chat) {
 			return
 		}
@@ -70,7 +70,7 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		}
 
 		bot.disableChangesMode()
-	case Delete:
+	case entity.Delete:
 		if !bot.enableChangesMode(ctx, deletingInfo, message.Chat) {
 			return
 		}
@@ -86,7 +86,7 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		return
 	}
 
-	if bot.context.step == Waited {
+	if bot.stepper.CurrentStep() == entity.Waited {
 		bot.sendMessage(chatId, successInfo)
 	}
 }
@@ -97,7 +97,7 @@ func (bot *TgBot) setAction(message *tgbotapi.Message) error {
 		return usecases.ErrNoOption
 	}
 
-	bot.context.action = action(newAction)
+	bot.context.action = entity.Action(newAction)
 	return nil
 }
 
@@ -127,7 +127,7 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 		}
 	}
 
-	if bot.context.step == End {
+	if bot.stepper.CurrentStep() == entity.End {
 		switch bot.mode {
 		case Shopping:
 			err := bot.db.ShoppingManager.AddPurchase(ctx, bot.context.purchase)
@@ -137,8 +137,8 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 			bot.context.purchase = &entity.Purchase{}
 		}
 
-		bot.context.step = Waited
-		bot.context.action = Nothing
+		bot.stepper.Reset()
+		bot.context.action = entity.Nothing
 	}
 
 	return nil
@@ -189,52 +189,39 @@ func (bot *TgBot) setUpdateInfo(message string) error {
 		return errors.New("Я не знаю таких данных, какие нужно изменить-то?")
 	}
 
-	switch step(updatingInfo) {
-	case Name:
-		bot.context.step = Name
-	case Description:
-		bot.context.step = Description
-	case Count:
-		bot.context.step = Count
-	case Unit:
-		bot.context.step = Unit
-	case Price:
-		bot.context.step = Price
-	default:
-		return errors.New("Я не знаю таких данных, какие нужно изменить-то?")
+	err = bot.stepper.SetStep(entity.Step(updatingInfo))
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
 func (bot *TgBot) setInfo(value string) error {
-	switch bot.context.step {
-	case Name:
+	switch bot.stepper.CurrentStep() {
+	case entity.Name:
 		if value == "" {
-			return errors.New("не смог получить название, напиши еще разочек, пожалуйста")
+			return errors.New("Не смог получить название, напиши еще разочек, пожалуйста!")
 		}
 		bot.context.purchase.Name = value
-		bot.context.step = Count
-	case Count:
+	case entity.Count:
 		count, err := strconv.Atoi(value)
 		if err != nil {
 			return errors.New("Я не разобрался, подскажи, пожалуйста, какое количество необходимо?")
 		}
 		bot.context.purchase.Count = uint8(count)
-		bot.context.step = Description
-	case Description:
+	case entity.Description:
 		bot.context.purchase.Description = value
-		bot.context.step = Unit
-	case Unit:
+	case entity.Unit:
 		bot.context.purchase.Unit = value
-		bot.context.step = Price
-	case Price:
+	case entity.Price:
 		price, err := strconv.Atoi(strings.ReplaceAll(value, " ", ""))
 		if err != nil {
 			return errors.New("Что-то я не разобрался с ценой, можешь прислать еще раз?")
 		}
 		bot.context.purchase.Price = uint64(price)
 		bot.context.purchase.CreatedAt = time.Now()
-		bot.context.step = End
 	}
+
+	bot.stepper.NextStep()
 	return nil
 }

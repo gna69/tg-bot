@@ -9,44 +9,6 @@ const (
 	Stop     = "/stop"
 )
 
-type action uint8
-
-const (
-	Nothing action = iota
-	ShowAll
-	Add
-	Change
-	Delete
-)
-
-type step uint8
-
-const (
-	Waited step = iota
-	Name
-	Description
-	Count
-	Unit
-	Price
-	End
-)
-
-func StepInfoMessage(info step) string {
-	switch info {
-	case Name:
-		return "Введите название"
-	case Description:
-		return "Введите описание"
-	case Count:
-		return "Введите количество"
-	case Unit:
-		return "Введите единицу измерения количества"
-	case Price:
-		return "Введите цену"
-	}
-	return ""
-}
-
 const (
 	DefaultOffset  = 0
 	DefaultTimeout = 60

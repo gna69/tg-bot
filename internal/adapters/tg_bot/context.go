@@ -2,6 +2,7 @@ package tg_bot
 
 import (
 	"context"
+	"github.com/gna69/tg-bot/internal/entity"
 	"strconv"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
@@ -18,8 +19,8 @@ func (bot *TgBot) enableChangesMode(ctx context.Context, infoMsg string, chat *t
 }
 
 func (bot *TgBot) disableChangesMode() {
-	bot.context.action = Nothing
-	bot.context.step = Waited
+	bot.stepper.Reset()
+	bot.context.action = entity.Nothing
 	bot.context.changes = false
 	bot.context.objectId = 0
 }
@@ -41,7 +42,7 @@ func (bot *TgBot) setObjectId(message *tgbotapi.Message) bool {
 }
 
 func (bot *TgBot) setUpdatedStep(message *tgbotapi.Message) bool {
-	if bot.context.step != Waited {
+	if bot.stepper.CurrentStep() != entity.Waited {
 		return true
 	}
 
@@ -50,6 +51,6 @@ func (bot *TgBot) setUpdatedStep(message *tgbotapi.Message) bool {
 		bot.sendMessage(message.Chat.ID, err.Error())
 		return false
 	}
-	bot.sendMessage(message.Chat.ID, StepInfoMessage(bot.context.step))
+	bot.sendMessage(message.Chat.ID, bot.stepper.StepInfo())
 	return false
 }

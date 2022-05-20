@@ -11,27 +11,18 @@ import (
 )
 
 type TgBot struct {
-	api      *tgbotapi.BotAPI
-	db       *pg.PostgresClient
-	enabled  bool
-	mode     string
-	context  modeContext
-	entities entities
+	api     *tgbotapi.BotAPI
+	db      *pg.PostgresClient
+	mode    string
+	stepper usecases.Stepper
+	context modeContext
 }
 
 type modeContext struct {
-	action   action
+	action   entity.Action
 	changes  bool
 	objectId uint
-	step     step
 	purchase *entity.Purchase
-}
-
-type entities struct {
-	purchase *entity.Purchase
-	product  *entity.Product
-	recipe   *entity.Recipe
-	workout  *entity.Workout
 }
 
 func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
@@ -41,15 +32,13 @@ func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
 	}
 
 	return &TgBot{
-		api:     api,
-		db:      db,
-		enabled: false,
-		mode:    Stop,
+		api:  api,
+		db:   db,
+		mode: Stop,
 		context: modeContext{
-			action:   Nothing,
+			action:   entity.Nothing,
 			changes:  false,
 			objectId: 0,
-			step:     Waited,
 			purchase: &entity.Purchase{},
 		},
 	}, nil
@@ -108,4 +97,13 @@ func (bot *TgBot) sendMessage(chatId int64, msg string) {
 
 func (bot *TgBot) isTextMessage(input interface{}) bool {
 	return reflect.TypeOf(input).Kind() == reflect.String && input.(string) != ""
+}
+
+func (bot *TgBot) isEnabled() bool {
+	switch bot.mode {
+	case Stop:
+		return false
+	default:
+		return true
+	}
 }

@@ -1,26 +1,35 @@
 package tg_bot
 
-import tgbotapi "github.com/Syfaro/telegram-bot-api"
+import (
+	tgbotapi "github.com/Syfaro/telegram-bot-api"
+	"github.com/gna69/tg-bot/internal/adapters/stepper"
+	"github.com/gna69/tg-bot/internal/usecases"
+)
 
 func (bot *TgBot) start(chat *tgbotapi.Chat) {
-	if bot.enabled {
+	if bot.isEnabled() {
 		bot.sendMessage(chat.ID, "Я уже работаю!")
 		return
 	}
-	bot.enabled = true
-	bot.changeMode(Stop, WelcomeMessage, chat)
+	bot.mode = Start
+	bot.sendMessage(chat.ID, WelcomeMessage)
 }
 
 func (bot *TgBot) stop(chat *tgbotapi.Chat) {
-	if !bot.enabled {
+	if !bot.isEnabled() {
 		bot.sendMessage(chat.ID, "Я уже выключен!")
 		return
 	}
 	bot.changeMode(Stop, FarewellMessage, chat)
-	bot.enabled = false
 }
 
 func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
+	shoppingStepper, err := stepper.New(usecases.ShoppingSteps)
+	if err != nil {
+
+	}
+
+	bot.stepper = shoppingStepper
 	bot.changeMode(Shopping, ShoppingBanner, chat)
 }
 
@@ -37,7 +46,7 @@ func (bot *TgBot) workoutsMode(chat *tgbotapi.Chat) {
 }
 
 func (bot *TgBot) changeMode(mode string, message string, chat *tgbotapi.Chat) {
-	if !bot.enabled {
+	if !bot.isEnabled() {
 		bot.sendMessage(chat.ID, AboutDisable)
 		return
 	}
