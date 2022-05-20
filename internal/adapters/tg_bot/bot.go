@@ -13,16 +13,8 @@ import (
 type TgBot struct {
 	api     *tgbotapi.BotAPI
 	db      *pg.PostgresClient
-	mode    string
+	command *entity.Command
 	stepper usecases.Stepper
-	context modeContext
-}
-
-type modeContext struct {
-	action   entity.Action
-	changes  bool
-	objectId uint
-	purchase *entity.Purchase
 }
 
 func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
@@ -31,16 +23,12 @@ func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
 		return nil, err
 	}
 
+	command := entity.NewCommand()
+
 	return &TgBot{
-		api:  api,
-		db:   db,
-		mode: Stop,
-		context: modeContext{
-			action:   entity.Nothing,
-			changes:  false,
-			objectId: 0,
-			purchase: &entity.Purchase{},
-		},
+		api:     api,
+		db:      db,
+		command: command,
 	}, nil
 }
 
@@ -58,17 +46,17 @@ func (bot *TgBot) Run(ctx context.Context) error {
 		if bot.isTextMessage(message.Message.Text) {
 			chat := message.Message.Chat
 			switch message.Message.Text {
-			case Start:
+			case entity.Start:
 				bot.start(chat)
-			case Shopping:
+			case entity.Shopping:
 				bot.shoppingMode(chat)
-			case Products:
+			case entity.Products:
 				bot.productsMode(chat)
-			case Recipes:
+			case entity.Recipes:
 				bot.recipesMode(chat)
-			case Workouts:
+			case entity.Workouts:
 				bot.workoutsMode(chat)
-			case Stop:
+			case entity.Stop:
 				bot.stop(chat)
 			default:
 				bot.handle(ctx, message.Message)
@@ -100,8 +88,8 @@ func (bot *TgBot) isTextMessage(input interface{}) bool {
 }
 
 func (bot *TgBot) isEnabled() bool {
-	switch bot.mode {
-	case Stop:
+	switch bot.command.GetCommand() {
+	case entity.Stop:
 		return false
 	default:
 		return true

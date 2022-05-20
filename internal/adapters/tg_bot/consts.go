@@ -1,15 +1,6 @@
 package tg_bot
 
 const (
-	Start    = "/start"
-	Shopping = "/shopping"
-	Products = "/products"
-	Recipes  = "/recipes"
-	Workouts = "/workouts"
-	Stop     = "/stop"
-)
-
-const (
 	DefaultOffset  = 0
 	DefaultTimeout = 60
 	WelcomeMessage = `Привет, я твой бот помощник по дому.

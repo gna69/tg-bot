@@ -9,10 +9,10 @@ import (
 )
 
 func (bot *TgBot) enableChangesMode(ctx context.Context, infoMsg string, chat *tgbotapi.Chat) bool {
-	if !bot.context.changes {
+	if !bot.stepper.IsChangingStep() {
 		bot.sendMessage(chat.ID, infoMsg)
 		bot.sendMessage(chat.ID, bot.showAll(ctx))
-		bot.context.changes = true
+		bot.stepper.EnableChangingOption()
 		return false
 	}
 	return true
@@ -20,13 +20,13 @@ func (bot *TgBot) enableChangesMode(ctx context.Context, infoMsg string, chat *t
 
 func (bot *TgBot) disableChangesMode() {
 	bot.stepper.Reset()
-	bot.context.action = entity.Nothing
-	bot.context.changes = false
-	bot.context.objectId = 0
+	bot.stepper.DisableChangingOption()
+	bot.command.SetAction(entity.Nothing)
+	bot.command.SetObjectId(0)
 }
 
 func (bot *TgBot) setObjectId(message *tgbotapi.Message) bool {
-	if bot.context.objectId != 0 {
+	if bot.command.GetObjectId() != 0 {
 		return true
 	}
 
@@ -36,7 +36,7 @@ func (bot *TgBot) setObjectId(message *tgbotapi.Message) bool {
 		return false
 	}
 
-	bot.context.objectId = uint(objId)
+	bot.command.SetObjectId(uint(objId))
 	bot.sendMessage(message.Chat.ID, UpdatingList)
 	return false
 }

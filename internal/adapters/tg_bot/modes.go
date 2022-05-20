@@ -3,6 +3,7 @@ package tg_bot
 import (
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"github.com/gna69/tg-bot/internal/adapters/stepper"
+	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/gna69/tg-bot/internal/usecases"
 )
 
@@ -11,7 +12,7 @@ func (bot *TgBot) start(chat *tgbotapi.Chat) {
 		bot.sendMessage(chat.ID, "Я уже работаю!")
 		return
 	}
-	bot.mode = Start
+	bot.command.SetCommand(entity.Start)
 	bot.sendMessage(chat.ID, WelcomeMessage)
 }
 
@@ -20,7 +21,7 @@ func (bot *TgBot) stop(chat *tgbotapi.Chat) {
 		bot.sendMessage(chat.ID, "Я уже выключен!")
 		return
 	}
-	bot.changeMode(Stop, FarewellMessage, chat)
+	bot.changeMode(entity.Stop, FarewellMessage, chat)
 }
 
 func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
@@ -30,19 +31,19 @@ func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 	}
 
 	bot.stepper = shoppingStepper
-	bot.changeMode(Shopping, ShoppingBanner, chat)
+	bot.changeMode(entity.Shopping, ShoppingBanner, chat)
 }
 
 func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
-	bot.changeMode(Products, ProductsBanner, chat)
+	bot.changeMode(entity.Products, ProductsBanner, chat)
 }
 
 func (bot *TgBot) recipesMode(chat *tgbotapi.Chat) {
-	bot.changeMode(Recipes, RecipesBanner, chat)
+	bot.changeMode(entity.Recipes, RecipesBanner, chat)
 }
 
 func (bot *TgBot) workoutsMode(chat *tgbotapi.Chat) {
-	bot.changeMode(Workouts, WorkoutsBanner, chat)
+	bot.changeMode(entity.Workouts, WorkoutsBanner, chat)
 }
 
 func (bot *TgBot) changeMode(mode string, message string, chat *tgbotapi.Chat) {
@@ -51,6 +52,6 @@ func (bot *TgBot) changeMode(mode string, message string, chat *tgbotapi.Chat) {
 		return
 	}
 	bot.disableChangesMode()
-	bot.mode = mode
+	bot.command.SetCommand(mode)
 	bot.sendMessage(chat.ID, message)
 }

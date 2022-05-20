@@ -34,6 +34,18 @@ func (s *Stepper) CurrentStep() entity.Step {
 	return s.steps[s.currentStep]
 }
 
+func (s *Stepper) IsChangingStep() bool {
+	return s.changingStep
+}
+
+func (s *Stepper) EnableChangingOption() {
+	s.changingStep = true
+}
+
+func (s *Stepper) DisableChangingOption() {
+	s.changingStep = false
+}
+
 func (s *Stepper) SetStep(newStep entity.Step) error {
 	for stepNumber, step := range s.steps {
 		if newStep == step {

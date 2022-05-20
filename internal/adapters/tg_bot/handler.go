@@ -26,7 +26,7 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		return
 	}
 
-	if bot.context.action == entity.Nothing {
+	if bot.command.GetAction() == entity.Nothing {
 		err := bot.setAction(message)
 		if err != nil {
 			bot.sendMessage(chatId, err.Error())
@@ -34,10 +34,10 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		}
 	}
 
-	switch bot.context.action {
+	switch bot.command.GetAction() {
 	case entity.ShowAll:
 		bot.sendMessage(chatId, bot.showAll(ctx))
-		bot.context.action = entity.Nothing
+		bot.command.SetAction(entity.Nothing)
 	case entity.Add:
 		if bot.stepper.CurrentStep() == entity.Waited {
 			bot.stepper.NextStep()
@@ -97,14 +97,14 @@ func (bot *TgBot) setAction(message *tgbotapi.Message) error {
 		return usecases.ErrNoOption
 	}
 
-	bot.context.action = entity.Action(newAction)
+	bot.command.SetAction(entity.Action(newAction))
 	return nil
 }
 
 func (bot *TgBot) showAll(ctx context.Context) string {
 	list := ""
-	switch bot.mode {
-	case Shopping:
+	switch bot.command.GetCommand() {
+	case entity.Shopping:
 		purchases, err := bot.db.ShoppingManager.GetPurchases(ctx)
 		if err != nil {
 			return "Не удалось получить список покупок, попробуй еще разок!"
@@ -119,8 +119,8 @@ func (bot *TgBot) showAll(ctx context.Context) string {
 }
 
 func (bot *TgBot) add(ctx context.Context, message string) error {
-	switch bot.mode {
-	case Shopping:
+	switch bot.command.GetCommand() {
+	case entity.Shopping:
 		err := bot.setInfo(message)
 		if err != nil {
 			return err
@@ -128,37 +128,37 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 	}
 
 	if bot.stepper.CurrentStep() == entity.End {
-		switch bot.mode {
-		case Shopping:
-			err := bot.db.ShoppingManager.AddPurchase(ctx, bot.context.purchase)
+		switch bot.command.GetCommand() {
+		case entity.Shopping:
+			err := bot.db.ShoppingManager.AddPurchase(ctx, bot.command.Purchase)
 			if err != nil {
 				return err
 			}
-			bot.context.purchase = &entity.Purchase{}
+			bot.command.Purchase = &entity.Purchase{}
 		}
 
 		bot.stepper.Reset()
-		bot.context.action = entity.Nothing
+		bot.command.SetAction(entity.Nothing)
 	}
 
 	return nil
 }
 
 func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
-	switch bot.mode {
-	case Shopping:
-		purchase, err := bot.db.ShoppingManager.GetPurchase(ctx, bot.context.objectId)
+	switch bot.command.GetCommand() {
+	case entity.Shopping:
+		purchase, err := bot.db.ShoppingManager.GetPurchase(ctx, bot.command.GetObjectId())
 		if err != nil {
 			return err
 		}
-		bot.context.purchase = purchase
+		bot.command.Purchase = purchase
 
 		err = bot.setInfo(message.Text)
 		if err != nil {
 			return err
 		}
 
-		err = bot.db.ShoppingManager.UpdatePurchase(ctx, bot.context.purchase)
+		err = bot.db.ShoppingManager.UpdatePurchase(ctx, bot.command.Purchase)
 		if err != nil {
 			return err
 		}
@@ -173,8 +173,8 @@ func (bot *TgBot) delete(ctx context.Context, message *tgbotapi.Message) error {
 		return err
 	}
 
-	switch bot.mode {
-	case Shopping:
+	switch bot.command.GetCommand() {
+	case entity.Shopping:
 		err = bot.db.ShoppingManager.DeletePurchase(ctx, uint(objId))
 		if err != nil {
 			return err
@@ -202,24 +202,24 @@ func (bot *TgBot) setInfo(value string) error {
 		if value == "" {
 			return errors.New("Не смог получить название, напиши еще разочек, пожалуйста!")
 		}
-		bot.context.purchase.Name = value
+		bot.command.Purchase.Name = value
 	case entity.Count:
 		count, err := strconv.Atoi(value)
 		if err != nil {
 			return errors.New("Я не разобрался, подскажи, пожалуйста, какое количество необходимо?")
 		}
-		bot.context.purchase.Count = uint8(count)
+		bot.command.Purchase.Count = uint8(count)
 	case entity.Description:
-		bot.context.purchase.Description = value
+		bot.command.Purchase.Description = value
 	case entity.Unit:
-		bot.context.purchase.Unit = value
+		bot.command.Purchase.Unit = value
 	case entity.Price:
 		price, err := strconv.Atoi(strings.ReplaceAll(value, " ", ""))
 		if err != nil {
 			return errors.New("Что-то я не разобрался с ценой, можешь прислать еще раз?")
 		}
-		bot.context.purchase.Price = uint64(price)
-		bot.context.purchase.CreatedAt = time.Now()
+		bot.command.Purchase.Price = uint64(price)
+		bot.command.Purchase.CreatedAt = time.Now()
 	}
 
 	bot.stepper.NextStep()

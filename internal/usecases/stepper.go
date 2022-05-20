@@ -8,6 +8,9 @@ type Stepper interface {
 	Reset()
 	NextStep()
 	CurrentStep() entity.Step
+	IsChangingStep() bool
+	EnableChangingOption()
+	DisableChangingOption()
 	SetStep(step entity.Step) error
 	StepInfo() string
 }
