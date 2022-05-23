@@ -3,13 +3,13 @@ package tg_bot
 import (
 	"context"
 	"errors"
-	"github.com/gna69/tg-bot/internal/entity"
 	"strconv"
 	"strings"
-	"time"
+
+	"github.com/gna69/tg-bot/internal/entity"
+	"github.com/gna69/tg-bot/internal/usecases"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
-	"github.com/gna69/tg-bot/internal/usecases"
 )
 
 const (
@@ -121,7 +121,7 @@ func (bot *TgBot) showAll(ctx context.Context) string {
 func (bot *TgBot) add(ctx context.Context, message string) error {
 	switch bot.command.GetCommand() {
 	case entity.Shopping:
-		err := bot.setInfo(message)
+		err := bot.command.SetObjectValue(bot.stepper.CurrentStep(), message)
 		if err != nil {
 			return err
 		}
@@ -130,11 +130,11 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 	if bot.stepper.CurrentStep() == entity.End {
 		switch bot.command.GetCommand() {
 		case entity.Shopping:
-			err := bot.db.ShoppingManager.AddPurchase(ctx, bot.command.Purchase)
+			err := bot.db.ShoppingManager.AddPurchase(ctx, bot.command.WorkingObject.Purchase)
 			if err != nil {
 				return err
 			}
-			bot.command.Purchase = &entity.Purchase{}
+			bot.command.WorkingObject.Purchase = &entity.Purchase{}
 		}
 
 		bot.stepper.Reset()
@@ -147,18 +147,18 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
 	switch bot.command.GetCommand() {
 	case entity.Shopping:
-		purchase, err := bot.db.ShoppingManager.GetPurchase(ctx, bot.command.GetObjectId())
+		purchase, err := bot.db.ShoppingManager.GetPurchase(ctx, bot.command.GetWorkingObjectId())
 		if err != nil {
 			return err
 		}
-		bot.command.Purchase = purchase
+		bot.command.WorkingObject.Purchase = purchase
 
-		err = bot.setInfo(message.Text)
+		err = bot.command.SetObjectValue(bot.stepper.CurrentStep(), message.Text)
 		if err != nil {
 			return err
 		}
 
-		err = bot.db.ShoppingManager.UpdatePurchase(ctx, bot.command.Purchase)
+		err = bot.db.ShoppingManager.UpdatePurchase(ctx, bot.command.WorkingObject.Purchase)
 		if err != nil {
 			return err
 		}
@@ -193,35 +193,5 @@ func (bot *TgBot) setUpdateInfo(message string) error {
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-func (bot *TgBot) setInfo(value string) error {
-	switch bot.stepper.CurrentStep() {
-	case entity.Name:
-		if value == "" {
-			return errors.New("Не смог получить название, напиши еще разочек, пожалуйста!")
-		}
-		bot.command.Purchase.Name = value
-	case entity.Count:
-		count, err := strconv.Atoi(value)
-		if err != nil {
-			return errors.New("Я не разобрался, подскажи, пожалуйста, какое количество необходимо?")
-		}
-		bot.command.Purchase.Count = uint8(count)
-	case entity.Description:
-		bot.command.Purchase.Description = value
-	case entity.Unit:
-		bot.command.Purchase.Unit = value
-	case entity.Price:
-		price, err := strconv.Atoi(strings.ReplaceAll(value, " ", ""))
-		if err != nil {
-			return errors.New("Что-то я не разобрался с ценой, можешь прислать еще раз?")
-		}
-		bot.command.Purchase.Price = uint64(price)
-		bot.command.Purchase.CreatedAt = time.Now()
-	}
-
-	bot.stepper.NextStep()
 	return nil
 }

@@ -10,9 +10,13 @@ const (
 )
 
 type Command struct {
-	command  string
-	action   Action
-	objectId uint
+	command         string
+	action          Action
+	workingObjectId uint
+	WorkingObject   CommandObject
+}
+
+type CommandObject struct {
 	Purchase *Purchase
 	Product  *Product
 	Recipe   *Recipe
@@ -42,10 +46,21 @@ func (c *Command) SetAction(action Action) {
 	c.action = action
 }
 
-func (c *Command) GetObjectId() uint {
-	return c.objectId
+func (c *Command) GetWorkingObjectId() uint {
+	return c.workingObjectId
 }
 
-func (c *Command) SetObjectId(id uint) {
-	c.objectId = id
+func (c *Command) SetWorkingObjectId(id uint) {
+	c.workingObjectId = id
+}
+
+func (c *Command) SetObjectValue(step Step, value string) error {
+	switch c.command {
+	case Shopping:
+		return c.WorkingObject.Purchase.SetValue(step, value)
+	case Products:
+	case Recipes:
+	case Workouts:
+	}
+	return nil
 }

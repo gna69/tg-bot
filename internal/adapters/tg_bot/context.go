@@ -22,11 +22,11 @@ func (bot *TgBot) disableChangesMode() {
 	bot.stepper.Reset()
 	bot.stepper.DisableChangingOption()
 	bot.command.SetAction(entity.Nothing)
-	bot.command.SetObjectId(0)
+	bot.command.SetWorkingObjectId(0)
 }
 
 func (bot *TgBot) setObjectId(message *tgbotapi.Message) bool {
-	if bot.command.GetObjectId() != 0 {
+	if bot.command.GetWorkingObjectId() != 0 {
 		return true
 	}
 
@@ -36,7 +36,7 @@ func (bot *TgBot) setObjectId(message *tgbotapi.Message) bool {
 		return false
 	}
 
-	bot.command.SetObjectId(uint(objId))
+	bot.command.SetWorkingObjectId(uint(objId))
 	bot.sendMessage(message.Chat.ID, UpdatingList)
 	return false
 }
