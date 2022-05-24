@@ -18,10 +18,11 @@ type ShoppingManagement interface {
 }
 
 type ProductsManagement interface {
-	AddProduct(product *entity.Product) error
-	UpdateProduct(newProduct *entity.Product) error
-	DeleteProduct(id uint) error
-	GetProducts() []entity.Product
+	AddProduct(ctx context.Context, product *entity.Product) error
+	UpdateProduct(ctx context.Context, newProduct *entity.Product) error
+	DeleteProduct(ctx context.Context, id uint) error
+	GetProduct(ctx context.Context, id uint) (*entity.Product, error)
+	GetProducts(ctx context.Context) ([]*entity.Product, error)
 }
 
 type RecipesManagement interface {

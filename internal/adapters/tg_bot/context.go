@@ -37,7 +37,7 @@ func (bot *TgBot) setObjectId(message *tgbotapi.Message) bool {
 	}
 
 	bot.command.SetWorkingObjectId(uint(objId))
-	bot.sendMessage(message.Chat.ID, UpdatingList)
+	bot.sendMessage(message.Chat.ID, bot.stepper.UpdatingInfo())
 	return false
 }
 

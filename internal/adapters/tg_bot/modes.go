@@ -35,6 +35,12 @@ func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 }
 
 func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
+	productsStepper, err := stepper.New(usecases.ProductsSteps)
+	if err != nil {
+
+	}
+
+	bot.stepper = productsStepper
 	bot.changeMode(entity.Products, ProductsBanner, chat)
 }
 

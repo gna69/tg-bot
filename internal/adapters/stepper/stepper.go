@@ -2,6 +2,7 @@ package stepper
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gna69/tg-bot/internal/entity"
 )
 
@@ -46,15 +47,12 @@ func (s *Stepper) DisableChangingOption() {
 	s.changingStep = false
 }
 
-func (s *Stepper) SetStep(newStep entity.Step) error {
-	for stepNumber, step := range s.steps {
-		if newStep == step {
-			s.currentStep = uint(stepNumber)
-			return nil
-		}
+func (s *Stepper) SetStep(newStep uint) error {
+	if newStep < 1 || newStep >= uint(len(s.steps)-1) {
+		return errors.New("Эту информацию я обновить не могу!")
 	}
-
-	return errors.New("Я не знаю таких данных, какие нужно изменить-то?")
+	s.currentStep = newStep
+	return nil
 }
 
 func (s *Stepper) StepInfo() string {
@@ -71,4 +69,23 @@ func (s *Stepper) StepInfo() string {
 		return "Введите цену"
 	}
 	return ""
+}
+
+func (s *Stepper) UpdatingInfo() string {
+	info := "Какую информацию хочешь поменять?\n"
+	for idx, step := range s.steps {
+		switch step {
+		case entity.Name:
+			info += fmt.Sprintf("%d) Название.\n", idx)
+		case entity.Description:
+			info += fmt.Sprintf("%d) Описание.\n", idx)
+		case entity.Count:
+			info += fmt.Sprintf("%d) Количество.\n", idx)
+		case entity.Unit:
+			info += fmt.Sprintf("%d) Еденицу измерения.\n", idx)
+		case entity.Price:
+			info += fmt.Sprintf("%d) Цену.\n", idx)
+		}
+	}
+	return info
 }

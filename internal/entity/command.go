@@ -13,7 +13,7 @@ type Command struct {
 	command         string
 	action          Action
 	workingObjectId uint
-	WorkingObject   CommandObject
+	WorkingObject   *CommandObject
 }
 
 type CommandObject struct {
@@ -27,6 +27,12 @@ func NewCommand() *Command {
 	return &Command{
 		command: Stop,
 		action:  Nothing,
+		WorkingObject: &CommandObject{
+			Purchase: &Purchase{},
+			Product:  &Product{},
+			Recipe:   &Recipe{},
+			Workout:  &Workout{},
+		},
 	}
 }
 
@@ -59,6 +65,7 @@ func (c *Command) SetObjectValue(step Step, value string) error {
 	case Shopping:
 		return c.WorkingObject.Purchase.SetValue(step, value)
 	case Products:
+		return c.WorkingObject.Product.SetValue(step, value)
 	case Recipes:
 	case Workouts:
 	}

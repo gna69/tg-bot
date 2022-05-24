@@ -29,3 +29,20 @@ func toPurchasesList(rows pgx.Rows) ([]*entity.Purchase, error) {
 
 	return purchases, nil
 }
+
+func toProductsList(rows pgx.Rows) ([]*entity.Product, error) {
+	var err error
+	var products []*entity.Product
+
+	for rows.Next() {
+		var product entity.Product
+		err = rows.Scan(&product.Id, &product.Name, &product.TotalCount)
+		if err != nil {
+			return nil, err
+		}
+
+		products = append(products, &product)
+	}
+
+	return products, nil
+}
