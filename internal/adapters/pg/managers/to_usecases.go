@@ -46,3 +46,27 @@ func toProductsList(rows pgx.Rows) ([]*entity.Product, error) {
 
 	return products, nil
 }
+
+func toRecipesList(rows pgx.Rows) ([]*entity.Recipe, error) {
+	var err error
+	var recipes []*entity.Recipe
+
+	for rows.Next() {
+		var recipe entity.Recipe
+		err = rows.Scan(
+			&recipe.Id,
+			&recipe.Name,
+			&recipe.Description,
+			&recipe.Ingredients,
+			&recipe.Actions,
+			&recipe.Complexity,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		recipes = append(recipes, &recipe)
+	}
+
+	return recipes, nil
+}

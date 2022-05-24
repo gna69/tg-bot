@@ -67,6 +67,7 @@ func (c *Command) SetObjectValue(step Step, value string) error {
 	case Products:
 		return c.WorkingObject.Product.SetValue(step, value)
 	case Recipes:
+		return c.WorkingObject.Recipe.SetValue(step, value)
 	case Workouts:
 	}
 	return nil

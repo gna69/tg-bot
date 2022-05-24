@@ -26,8 +26,9 @@ type ProductsManagement interface {
 }
 
 type RecipesManagement interface {
-	AddRecipe(recipe *entity.Recipe) error
-	UpdateRecipe(newRecipe *entity.Recipe) error
-	DeleteRecipe(id uint) error
-	GetRecipes() []entity.Recipe
+	AddRecipe(ctx context.Context, recipe *entity.Recipe) error
+	UpdateRecipe(ctx context.Context, newRecipe *entity.Recipe) error
+	DeleteRecipe(ctx context.Context, id uint) error
+	GetRecipe(ctx context.Context, id uint) (*entity.Recipe, error)
+	GetRecipes(ctx context.Context) ([]*entity.Recipe, error)
 }

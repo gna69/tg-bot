@@ -18,27 +18,19 @@ func NewProductsManager(conn *pgx.Conn) *ProductsManager {
 func (pm *ProductsManager) AddProduct(ctx context.Context, product *entity.Product) error {
 	query := `INSERT INTO products (name, total_count) VALUES ($1, $2);`
 	_, err := pm.conn.Exec(ctx, query, product.Name, product.TotalCount)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (pm *ProductsManager) UpdateProduct(ctx context.Context, newProduct *entity.Product) error {
 	query := `UPDATE products SET name=$1, total_count=$2 WHERE id=$3;`
 	_, err := pm.conn.Exec(ctx, query, newProduct.Name, newProduct.TotalCount, newProduct.Id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (pm *ProductsManager) DeleteProduct(ctx context.Context, id uint) error {
 	query := `DELETE FROM products WHERE id=$1;`
-	if _, err := pm.conn.Exec(ctx, query, id); err != nil {
-		return err
-	}
-	return nil
+	_, err := pm.conn.Exec(ctx, query, id)
+	return err
 }
 
 func (pm *ProductsManager) GetProduct(ctx context.Context, id uint) (*entity.Product, error) {

@@ -67,6 +67,12 @@ func (s *Stepper) StepInfo() string {
 		return "Введите единицу измерения количества"
 	case entity.Price:
 		return "Введите цену"
+	case entity.Ingredients:
+		return "Введите ингридиенты (через дефис или двоеточие можно указать количество)"
+	case entity.Actions:
+		return "Введите последовательность действий"
+	case entity.Complexity:
+		return "Введите сложность рецепта по 5ти бальной шкале"
 	}
 	return ""
 }

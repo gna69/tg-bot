@@ -9,5 +9,8 @@ const (
 	Count
 	Unit
 	Price
+	Ingredients
+	Actions
+	Complexity
 	End
 )

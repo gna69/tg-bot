@@ -116,6 +116,12 @@ func (bot *TgBot) showAll(ctx context.Context) string {
 			return "Не удалось получить список покупок, попробуй еще разок!"
 		}
 		list = bot.db.ProductsManager.String(products)
+	case entity.Recipes:
+		recipes, err := bot.db.RecipesManager.GetRecipes(ctx)
+		if err != nil {
+			return "Не удалось получить список рецептов, попробуй еще разок!"
+		}
+		list = bot.db.RecipesManager.String(recipes)
 	}
 
 	if len(list) == 0 {
@@ -125,17 +131,9 @@ func (bot *TgBot) showAll(ctx context.Context) string {
 }
 
 func (bot *TgBot) add(ctx context.Context, message string) error {
-	switch bot.command.GetCommand() {
-	case entity.Shopping:
-		err := bot.command.SetObjectValue(bot.stepper.CurrentStep(), message)
-		if err != nil {
-			return err
-		}
-	case entity.Products:
-		err := bot.command.SetObjectValue(bot.stepper.CurrentStep(), message)
-		if err != nil {
-			return err
-		}
+	err := bot.command.SetObjectValue(bot.stepper.CurrentStep(), message)
+	if err != nil {
+		return err
 	}
 	bot.stepper.NextStep()
 
@@ -153,6 +151,12 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 				return err
 			}
 			bot.command.WorkingObject.Product = &entity.Product{}
+		case entity.Recipes:
+			err := bot.db.RecipesManager.AddRecipe(ctx, bot.command.WorkingObject.Recipe)
+			if err != nil {
+				return err
+			}
+			bot.command.WorkingObject.Recipe = &entity.Recipe{}
 		}
 
 		bot.stepper.Reset()
@@ -192,6 +196,26 @@ func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
 		}
 
 		err = bot.db.ProductsManager.UpdateProduct(ctx, bot.command.WorkingObject.Product)
+		if err != nil {
+			return err
+		}
+	case entity.Recipes:
+		recipe, err := bot.db.RecipesManager.GetRecipe(ctx, bot.command.GetWorkingObjectId())
+		if err != nil {
+			return err
+		}
+		bot.command.WorkingObject.Recipe = recipe
+
+		// todo: mb deleting workin obj
+		err = bot.command.SetObjectValue(bot.stepper.CurrentStep(), message.Text)
+		if err != nil {
+			return err
+		}
+
+		err = bot.db.RecipesManager.UpdateRecipe(ctx, bot.command.WorkingObject.Recipe)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -211,7 +235,14 @@ func (bot *TgBot) delete(ctx context.Context, message *tgbotapi.Message) error {
 		}
 	case entity.Products:
 		err = bot.db.ProductsManager.DeleteProduct(ctx, uint(objId))
-
+		if err != nil {
+			return err
+		}
+	case entity.Recipes:
+		err = bot.db.RecipesManager.DeleteRecipe(ctx, uint(objId))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
