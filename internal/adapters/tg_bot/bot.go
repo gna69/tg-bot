@@ -2,6 +2,7 @@ package tg_bot
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"reflect"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
@@ -42,6 +43,13 @@ func (bot *TgBot) Run(ctx context.Context) error {
 		if message.Message == nil {
 			continue
 		}
+
+		log.Debug().
+			Int("messageId", message.Message.MessageID).
+			Str("messageText", message.Message.Text).
+			Int("chatId", int(message.Message.Chat.ID)).
+			Str("chatTitle", message.Message.Chat.Title).
+			Str("from", message.Message.Chat.FirstName).Send()
 
 		if bot.isTextMessage(message.Message.Text) {
 			chat := message.Message.Chat

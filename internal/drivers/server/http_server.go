@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"github.com/rs/zerolog/log"
 	"sync"
 
 	"github.com/gna69/tg-bot/internal/usecases"
@@ -18,11 +18,10 @@ func (s *Server) RunBots(ctx context.Context, bots ...usecases.Bot) error {
 	wg := sync.WaitGroup{}
 
 	for _, bot := range bots {
-
 		go func(bot usecases.Bot) {
 			err := bot.Run(ctx)
 			if err != nil {
-				fmt.Println("err: ", err.Error())
+				log.Error().Msgf("Err: %s", err.Error())
 			}
 
 			wg.Done()
@@ -31,7 +30,7 @@ func (s *Server) RunBots(ctx context.Context, bots ...usecases.Bot) error {
 		wg.Add(1)
 	}
 
-	fmt.Println("All bots are running ")
+	log.Info().Msg("All bots are running...")
 	wg.Wait()
 	return nil
 }

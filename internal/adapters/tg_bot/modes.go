@@ -5,6 +5,7 @@ import (
 	"github.com/gna69/tg-bot/internal/adapters/stepper"
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/gna69/tg-bot/internal/usecases"
+	"github.com/rs/zerolog/log"
 )
 
 func (bot *TgBot) start(chat *tgbotapi.Chat) {
@@ -14,6 +15,8 @@ func (bot *TgBot) start(chat *tgbotapi.Chat) {
 	}
 	bot.command.SetCommand(entity.Start)
 	bot.sendMessage(chat.ID, WelcomeMessage)
+	log.Debug().Msg("Starting bot")
+
 }
 
 func (bot *TgBot) stop(chat *tgbotapi.Chat) {
@@ -22,6 +25,7 @@ func (bot *TgBot) stop(chat *tgbotapi.Chat) {
 		return
 	}
 	bot.changeMode(entity.Stop, FarewellMessage, chat)
+	log.Debug().Msg("Stopping bot")
 }
 
 func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
@@ -32,6 +36,7 @@ func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 
 	bot.stepper = shoppingStepper
 	bot.changeMode(entity.Shopping, ShoppingBanner, chat)
+	log.Debug().Msgf("Setting mode to %s", entity.Shopping)
 }
 
 func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
@@ -42,6 +47,7 @@ func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
 
 	bot.stepper = productsStepper
 	bot.changeMode(entity.Products, ProductsBanner, chat)
+	log.Debug().Msgf("Setting mode to %s", entity.Products)
 }
 
 func (bot *TgBot) recipesMode(chat *tgbotapi.Chat) {
@@ -52,6 +58,7 @@ func (bot *TgBot) recipesMode(chat *tgbotapi.Chat) {
 
 	bot.stepper = recipesStepper
 	bot.changeMode(entity.Recipes, RecipesBanner, chat)
+	log.Debug().Msgf("Setting mode to %s", entity.Recipes)
 }
 
 func (bot *TgBot) workoutsMode(chat *tgbotapi.Chat) {
