@@ -91,6 +91,12 @@ func (s *Stepper) UpdatingInfo() string {
 			info += fmt.Sprintf("%d) Еденицу измерения.\n", idx)
 		case entity.Price:
 			info += fmt.Sprintf("%d) Цену.\n", idx)
+		case entity.Ingredients:
+			info += fmt.Sprintf("%d) Список ингредиентов.\n", idx)
+		case entity.Actions:
+			info += fmt.Sprintf("%d) Последовательность действий. \n", idx)
+		case entity.Complexity:
+			info += fmt.Sprintf("%d) Сложность.\n", idx)
 		}
 	}
 	return info

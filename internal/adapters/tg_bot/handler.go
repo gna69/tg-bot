@@ -206,7 +206,6 @@ func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
 		}
 		bot.command.WorkingObject.Recipe = recipe
 
-		// todo: mb deleting workin obj
 		err = bot.command.SetObjectValue(bot.stepper.CurrentStep(), message.Text)
 		if err != nil {
 			return err

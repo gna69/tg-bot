@@ -27,7 +27,7 @@ func (bot *TgBot) stop(chat *tgbotapi.Chat) {
 func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 	shoppingStepper, err := stepper.New(usecases.ShoppingSteps)
 	if err != nil {
-
+		return
 	}
 
 	bot.stepper = shoppingStepper
@@ -37,7 +37,7 @@ func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
 	productsStepper, err := stepper.New(usecases.ProductsSteps)
 	if err != nil {
-
+		return
 	}
 
 	bot.stepper = productsStepper
@@ -47,7 +47,7 @@ func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
 func (bot *TgBot) recipesMode(chat *tgbotapi.Chat) {
 	recipesStepper, err := stepper.New(usecases.RecipesSteps)
 	if err != nil {
-
+		return
 	}
 
 	bot.stepper = recipesStepper
