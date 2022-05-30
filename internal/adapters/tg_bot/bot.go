@@ -2,23 +2,24 @@ package tg_bot
 
 import (
 	"context"
+	"github.com/jackc/pgx/v4"
 	"github.com/rs/zerolog/log"
 	"reflect"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
-	"github.com/gna69/tg-bot/internal/adapters/pg"
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/gna69/tg-bot/internal/usecases"
 )
 
 type TgBot struct {
 	api     *tgbotapi.BotAPI
-	db      *pg.PostgresClient
+	db      *pgx.Conn
 	command *entity.Command
+	manager usecases.Manager
 	stepper usecases.Stepper
 }
 
-func NewTelegramBot(token string, db *pg.PostgresClient) (*TgBot, error) {
+func NewTelegramBot(token string, db *pgx.Conn) (*TgBot, error) {
 	api, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return nil, err
@@ -51,6 +52,11 @@ func (bot *TgBot) Run(ctx context.Context) error {
 			Str("chatTitle", message.Message.Chat.Title).
 			Str("from", message.Message.Chat.FirstName).Send()
 
+		if message.Message.From.ID != 712226067 && message.Message.From.ID != 455932005 {
+			bot.sendMessage(message.Message.Chat.ID, "Я нахожусь на этапе разработки, приходи в июле)")
+			continue
+		}
+
 		if bot.isTextMessage(message.Message.Text) {
 			chat := message.Message.Chat
 			switch message.Message.Text {
@@ -64,8 +70,6 @@ func (bot *TgBot) Run(ctx context.Context) error {
 				bot.recipesMode(chat)
 			case entity.Workouts:
 				bot.workoutsMode(chat)
-			case entity.Stop:
-				bot.stop(chat)
 			default:
 				bot.handle(ctx, message.Message)
 			}
@@ -93,13 +97,4 @@ func (bot *TgBot) sendMessage(chatId int64, msg string) {
 
 func (bot *TgBot) isTextMessage(input interface{}) bool {
 	return reflect.TypeOf(input).Kind() == reflect.String && input.(string) != ""
-}
-
-func (bot *TgBot) isEnabled() bool {
-	switch bot.command.GetCommand() {
-	case entity.Stop:
-		return false
-	default:
-		return true
-	}
 }

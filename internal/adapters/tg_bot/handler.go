@@ -21,11 +21,6 @@ const (
 func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 
-	if !bot.isEnabled() {
-		bot.sendMessage(chatId, AboutDisable)
-		return
-	}
-
 	if bot.command.GetAction() == entity.Nothing {
 		err := bot.setAction(message)
 		if err != nil {
@@ -101,64 +96,40 @@ func (bot *TgBot) setAction(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (bot *TgBot) showAll(ctx context.Context) string {
-	list := ""
-	switch bot.command.GetCommand() {
-	case entity.Shopping:
-		purchases, err := bot.db.ShoppingManager.GetPurchases(ctx)
-		if err != nil {
-			return "Не удалось получить список покупок, попробуй еще разок!"
-		}
-		list = bot.db.ShoppingManager.String(purchases)
-	case entity.Products:
-		products, err := bot.db.ProductsManager.GetProducts(ctx)
-		if err != nil {
-			return "Не удалось получить список покупок, попробуй еще разок!"
-		}
-		list = bot.db.ProductsManager.String(products)
-	case entity.Recipes:
-		recipes, err := bot.db.RecipesManager.GetRecipes(ctx)
-		if err != nil {
-			return "Не удалось получить список рецептов, попробуй еще разок!"
-		}
-		list = bot.db.RecipesManager.String(recipes)
+func toString(objs []entity.Object) string {
+	str := ""
+	for _, obj := range objs {
+		str += obj.ToString()
 	}
-
-	if len(list) == 0 {
+	if len(str) == 0 {
 		return usecases.EmptyList
 	}
-	return list
+	return str
+}
+
+func (bot *TgBot) showAll(ctx context.Context) string {
+	result, err := bot.manager.GetAll(ctx)
+	if err != nil {
+		return err.Error()
+	}
+
+	return toString(result)
 }
 
 func (bot *TgBot) add(ctx context.Context, message string) error {
-	err := bot.command.SetObjectValue(bot.stepper.CurrentStep(), message)
+	err := bot.command.Object.SetValue(bot.stepper.CurrentStep(), message)
 	if err != nil {
 		return err
 	}
 	bot.stepper.NextStep()
 
 	if bot.stepper.CurrentStep() == entity.End {
-		switch bot.command.GetCommand() {
-		case entity.Shopping:
-			err := bot.db.ShoppingManager.AddPurchase(ctx, bot.command.WorkingObject.Purchase)
-			if err != nil {
-				return err
-			}
-			bot.command.WorkingObject.Purchase = &entity.Purchase{}
-		case entity.Products:
-			err := bot.db.ProductsManager.AddProduct(ctx, bot.command.WorkingObject.Product)
-			if err != nil {
-				return err
-			}
-			bot.command.WorkingObject.Product = &entity.Product{}
-		case entity.Recipes:
-			err := bot.db.RecipesManager.AddRecipe(ctx, bot.command.WorkingObject.Recipe)
-			if err != nil {
-				return err
-			}
-			bot.command.WorkingObject.Recipe = &entity.Recipe{}
+		err := bot.manager.Add(ctx, bot.command.Object)
+		if err != nil {
+			return err
 		}
 
+		bot.command.Object = nil
 		bot.stepper.Reset()
 		bot.command.SetAction(entity.Nothing)
 	}
@@ -166,55 +137,20 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 }
 
 func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
-	switch bot.command.GetCommand() {
-	case entity.Shopping:
-		purchase, err := bot.db.ShoppingManager.GetPurchase(ctx, bot.command.GetWorkingObjectId())
-		if err != nil {
-			return err
-		}
-		bot.command.WorkingObject.Purchase = purchase
+	updatingObject, err := bot.manager.Get(ctx, bot.command.GetWorkingObjectId())
+	if err != nil {
+		return err
+	}
+	bot.command.Object = updatingObject
 
-		err = bot.command.SetObjectValue(bot.stepper.CurrentStep(), message.Text)
-		if err != nil {
-			return err
-		}
+	err = bot.command.Object.SetValue(bot.stepper.CurrentStep(), message.Text)
+	if err != nil {
+		return err
+	}
 
-		err = bot.db.ShoppingManager.UpdatePurchase(ctx, bot.command.WorkingObject.Purchase)
-		if err != nil {
-			return err
-		}
-	case entity.Products:
-		product, err := bot.db.ProductsManager.GetProduct(ctx, bot.command.GetWorkingObjectId())
-		if err != nil {
-			return err
-		}
-		bot.command.WorkingObject.Product = product
-
-		err = bot.command.SetObjectValue(bot.stepper.CurrentStep(), message.Text)
-		if err != nil {
-			return err
-		}
-
-		err = bot.db.ProductsManager.UpdateProduct(ctx, bot.command.WorkingObject.Product)
-		if err != nil {
-			return err
-		}
-	case entity.Recipes:
-		recipe, err := bot.db.RecipesManager.GetRecipe(ctx, bot.command.GetWorkingObjectId())
-		if err != nil {
-			return err
-		}
-		bot.command.WorkingObject.Recipe = recipe
-
-		err = bot.command.SetObjectValue(bot.stepper.CurrentStep(), message.Text)
-		if err != nil {
-			return err
-		}
-
-		err = bot.db.RecipesManager.UpdateRecipe(ctx, bot.command.WorkingObject.Recipe)
-		if err != nil {
-			return err
-		}
+	err = bot.manager.Update(ctx, bot.command.Object)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -226,24 +162,8 @@ func (bot *TgBot) delete(ctx context.Context, message *tgbotapi.Message) error {
 		return err
 	}
 
-	switch bot.command.GetCommand() {
-	case entity.Shopping:
-		err = bot.db.ShoppingManager.DeletePurchase(ctx, uint(objId))
-		if err != nil {
-			return err
-		}
-	case entity.Products:
-		err = bot.db.ProductsManager.DeleteProduct(ctx, uint(objId))
-		if err != nil {
-			return err
-		}
-	case entity.Recipes:
-		err = bot.db.RecipesManager.DeleteRecipe(ctx, uint(objId))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	err = bot.manager.Delete(ctx, uint(objId))
+	return err
 }
 
 func (bot *TgBot) setUpdateInfo(message string) error {

@@ -34,3 +34,10 @@ User can add new recipe, update or delete existing and get all recipes.
 This is timetable of your workouts.
 
 User can add new workout, update or delete existing and get all workouts.
+
+# Commands in tg
+
+shopping - Режим покупок
+products - Список продуктов
+recipes - Рецептики
+workouts - Расписание тренировок

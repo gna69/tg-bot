@@ -27,6 +27,33 @@ func (p *Purchase) ToString() string {
 	return strView
 }
 
+func (p *Purchase) GetId() uint {
+	return p.Id
+}
+
+func (p *Purchase) GetName() string {
+	return p.Name
+}
+func (p *Purchase) GetCount() uint {
+	return uint(p.Count)
+}
+
+func (p *Purchase) GetUnit() string {
+	return p.Unit
+}
+
+func (p *Purchase) GetPrice() uint64 {
+	return p.Price
+}
+
+func (p *Purchase) GetCreatedAt() int64 {
+	return p.CreatedAt.Unix()
+}
+
+func (p *Purchase) GetDescription() string {
+	return p.Description
+}
+
 func (p *Purchase) SetValue(step Step, value string) error {
 	switch step {
 	case Name:
@@ -53,4 +80,16 @@ func (p *Purchase) SetValue(step Step, value string) error {
 		p.CreatedAt = time.Now()
 	}
 	return nil
+}
+
+func (p *Purchase) GetIngredients() string {
+	return ""
+}
+
+func (p *Purchase) GetActions() string {
+	return ""
+}
+
+func (p *Purchase) GetComplexity() uint8 {
+	return 0
 }

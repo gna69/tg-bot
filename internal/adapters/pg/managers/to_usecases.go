@@ -5,9 +5,9 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-func toPurchasesList(rows pgx.Rows) ([]*entity.Purchase, error) {
+func toPurchasesList(rows pgx.Rows) ([]entity.Object, error) {
 	var err error
-	var purchases []*entity.Purchase
+	var purchases []entity.Object
 
 	for rows.Next() {
 		var purchase entity.Purchase
@@ -30,9 +30,9 @@ func toPurchasesList(rows pgx.Rows) ([]*entity.Purchase, error) {
 	return purchases, nil
 }
 
-func toProductsList(rows pgx.Rows) ([]*entity.Product, error) {
+func toProductsList(rows pgx.Rows) ([]entity.Object, error) {
 	var err error
-	var products []*entity.Product
+	var products []entity.Object
 
 	for rows.Next() {
 		var product entity.Product
@@ -47,9 +47,9 @@ func toProductsList(rows pgx.Rows) ([]*entity.Product, error) {
 	return products, nil
 }
 
-func toRecipesList(rows pgx.Rows) ([]*entity.Recipe, error) {
+func toRecipesList(rows pgx.Rows) ([]entity.Object, error) {
 	var err error
-	var recipes []*entity.Recipe
+	var recipes []entity.Object
 
 	for rows.Next() {
 		var recipe entity.Recipe

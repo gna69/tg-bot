@@ -3,7 +3,6 @@ package managers
 import (
 	"context"
 	"github.com/gna69/tg-bot/internal/entity"
-
 	"github.com/jackc/pgx/v4"
 )
 
@@ -15,25 +14,25 @@ func NewProductsManager(conn *pgx.Conn) *ProductsManager {
 	return &ProductsManager{conn: conn}
 }
 
-func (pm *ProductsManager) AddProduct(ctx context.Context, product *entity.Product) error {
+func (pm *ProductsManager) Add(ctx context.Context, product entity.Object) error {
 	query := `INSERT INTO products (name, total_count) VALUES ($1, $2);`
-	_, err := pm.conn.Exec(ctx, query, product.Name, product.TotalCount)
+	_, err := pm.conn.Exec(ctx, query, product.GetName(), product.GetCount())
 	return err
 }
 
-func (pm *ProductsManager) UpdateProduct(ctx context.Context, newProduct *entity.Product) error {
+func (pm *ProductsManager) Update(ctx context.Context, newProduct entity.Object) error {
 	query := `UPDATE products SET name=$1, total_count=$2 WHERE id=$3;`
-	_, err := pm.conn.Exec(ctx, query, newProduct.Name, newProduct.TotalCount, newProduct.Id)
+	_, err := pm.conn.Exec(ctx, query, newProduct.GetName(), newProduct.GetCount(), newProduct.GetId())
 	return err
 }
 
-func (pm *ProductsManager) DeleteProduct(ctx context.Context, id uint) error {
+func (pm *ProductsManager) Delete(ctx context.Context, id uint) error {
 	query := `DELETE FROM products WHERE id=$1;`
 	_, err := pm.conn.Exec(ctx, query, id)
 	return err
 }
 
-func (pm *ProductsManager) GetProduct(ctx context.Context, id uint) (*entity.Product, error) {
+func (pm *ProductsManager) Get(ctx context.Context, id uint) (entity.Object, error) {
 	query := `SELECT * FROM products WHERE id=$1;`
 	product := &entity.Product{}
 
@@ -46,25 +45,19 @@ func (pm *ProductsManager) GetProduct(ctx context.Context, id uint) (*entity.Pro
 	return product, nil
 }
 
-func (pm *ProductsManager) GetProducts(ctx context.Context) ([]*entity.Product, error) {
+func (pm *ProductsManager) GetAll(ctx context.Context) ([]entity.Object, error) {
 	query := `SELECT * FROM products;`
+	var products []entity.Object
+
 	rows, err := pm.conn.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
-	products, err := toProductsList(rows)
+	products, err = toProductsList(rows)
 	if err != nil {
 		return nil, err
 	}
 
 	return products, nil
-}
-
-func (pm *ProductsManager) String(products []*entity.Product) string {
-	list := ""
-	for _, product := range products {
-		list += product.ToString()
-	}
-	return list
 }

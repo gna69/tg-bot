@@ -24,9 +24,7 @@ func main() {
 		}
 	}(pgConn, ctx)
 
-	pgClient := pg.New(pgConn)
-
-	tgBot, err := tg_bot.NewTelegramBot(cfg.BotToken, pgClient)
+	tgBot, err := tg_bot.NewTelegramBot(cfg.BotToken, pgConn)
 	if err != nil {
 		log.Fatal("Can't create telegram bot: ", err.Error())
 	}

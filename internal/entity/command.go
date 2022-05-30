@@ -6,33 +6,19 @@ const (
 	Products = "/products"
 	Recipes  = "/recipes"
 	Workouts = "/workouts"
-	Stop     = "/stop"
 )
 
 type Command struct {
 	command         string
 	action          Action
+	Object          Object
 	workingObjectId uint
-	WorkingObject   *CommandObject
-}
-
-type CommandObject struct {
-	Purchase *Purchase
-	Product  *Product
-	Recipe   *Recipe
-	Workout  *Workout
 }
 
 func NewCommand() *Command {
 	return &Command{
-		command: Stop,
+		command: Start,
 		action:  Nothing,
-		WorkingObject: &CommandObject{
-			Purchase: &Purchase{},
-			Product:  &Product{},
-			Recipe:   &Recipe{},
-			Workout:  &Workout{},
-		},
 	}
 }
 
@@ -58,17 +44,4 @@ func (c *Command) GetWorkingObjectId() uint {
 
 func (c *Command) SetWorkingObjectId(id uint) {
 	c.workingObjectId = id
-}
-
-func (c *Command) SetObjectValue(step Step, value string) error {
-	switch c.command {
-	case Shopping:
-		return c.WorkingObject.Purchase.SetValue(step, value)
-	case Products:
-		return c.WorkingObject.Product.SetValue(step, value)
-	case Recipes:
-		return c.WorkingObject.Recipe.SetValue(step, value)
-	case Workouts:
-	}
-	return nil
 }

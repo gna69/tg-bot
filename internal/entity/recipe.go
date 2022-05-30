@@ -26,6 +26,30 @@ func (r *Recipe) ToString() string {
 	return strView
 }
 
+func (r *Recipe) GetName() string {
+	return r.Name
+}
+
+func (r *Recipe) GetIngredients() string {
+	return r.Ingredients
+}
+
+func (r *Recipe) GetActions() string {
+	return r.Actions
+}
+
+func (r *Recipe) GetComplexity() uint8 {
+	return r.Complexity
+}
+
+func (r *Recipe) GetId() uint {
+	return r.Id
+}
+
+func (r *Recipe) GetDescription() string {
+	return r.Description
+}
+
 func (r *Recipe) SetValue(step Step, value string) error {
 	switch step {
 	case Name:
@@ -50,4 +74,20 @@ func (r *Recipe) SetValue(step Step, value string) error {
 		r.Complexity = uint8(complexity)
 	}
 	return nil
+}
+
+func (r *Recipe) GetUnit() string {
+	return ""
+}
+
+func (r *Recipe) GetPrice() uint64 {
+	return 0
+}
+
+func (r *Recipe) GetCreatedAt() int64 {
+	return 0
+}
+
+func (r *Recipe) GetCount() uint {
+	return 0
 }

@@ -2,6 +2,7 @@ package tg_bot
 
 import (
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
+	"github.com/gna69/tg-bot/internal/adapters/pg"
 	"github.com/gna69/tg-bot/internal/adapters/stepper"
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/gna69/tg-bot/internal/usecases"
@@ -9,23 +10,9 @@ import (
 )
 
 func (bot *TgBot) start(chat *tgbotapi.Chat) {
-	if bot.isEnabled() {
-		bot.sendMessage(chat.ID, "Я уже работаю!")
-		return
-	}
 	bot.command.SetCommand(entity.Start)
 	bot.sendMessage(chat.ID, WelcomeMessage)
 	log.Debug().Msg("Starting bot")
-
-}
-
-func (bot *TgBot) stop(chat *tgbotapi.Chat) {
-	if !bot.isEnabled() {
-		bot.sendMessage(chat.ID, "Я уже выключен!")
-		return
-	}
-	bot.changeMode(entity.Stop, FarewellMessage, chat)
-	log.Debug().Msg("Stopping bot")
 }
 
 func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
@@ -66,11 +53,8 @@ func (bot *TgBot) workoutsMode(chat *tgbotapi.Chat) {
 }
 
 func (bot *TgBot) changeMode(mode string, message string, chat *tgbotapi.Chat) {
-	if !bot.isEnabled() {
-		bot.sendMessage(chat.ID, AboutDisable)
-		return
-	}
 	bot.disableChangesMode()
 	bot.command.SetCommand(mode)
+	bot.manager = pg.NewManager(mode, bot.db)
 	bot.sendMessage(chat.ID, message)
 }
