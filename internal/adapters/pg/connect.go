@@ -3,9 +3,10 @@ package pg
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/jackc/pgx/v4"
-	"log"
 )
 
 var pgCfg struct {

@@ -1,7 +1,7 @@
 package pg
 
 import (
-	"github.com/gna69/tg-bot/internal/adapters/pg/managers"
+	"github.com/gna69/tg-bot/internal/adapters/managers"
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/gna69/tg-bot/internal/usecases"
 	"github.com/jackc/pgx/v4"

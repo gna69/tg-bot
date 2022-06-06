@@ -2,13 +2,14 @@ package tg_bot
 
 import (
 	"context"
-	"github.com/jackc/pgx/v4"
-	"github.com/rs/zerolog/log"
 	"reflect"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/gna69/tg-bot/internal/usecases"
+
+	"github.com/jackc/pgx/v4"
+	"github.com/rs/zerolog/log"
 )
 
 type TgBot struct {
