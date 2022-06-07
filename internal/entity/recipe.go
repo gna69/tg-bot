@@ -13,6 +13,7 @@ type Recipe struct {
 	Ingredients string
 	Actions     string
 	Complexity  uint8
+	OwnerId     uint
 }
 
 func (r *Recipe) ToString() string {
@@ -48,6 +49,14 @@ func (r *Recipe) GetId() uint {
 
 func (r *Recipe) GetDescription() string {
 	return r.Description
+}
+
+func (r *Recipe) GetOwnerId() uint {
+	return r.OwnerId
+}
+
+func (r *Recipe) SetOwnerId(ownerId uint) {
+	r.OwnerId = ownerId
 }
 
 func (r *Recipe) SetValue(step Step, value string) error {
@@ -90,4 +99,8 @@ func (r *Recipe) GetCreatedAt() int64 {
 
 func (r *Recipe) GetCount() uint {
 	return 0
+}
+
+func (r *Recipe) GetMembers() []string {
+	return nil
 }

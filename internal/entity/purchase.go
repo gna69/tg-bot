@@ -16,6 +16,7 @@ type Purchase struct {
 	Unit        string
 	Price       uint64
 	CreatedAt   time.Time
+	OwnerId     uint
 }
 
 func (p *Purchase) ToString() string {
@@ -52,6 +53,18 @@ func (p *Purchase) GetCreatedAt() int64 {
 
 func (p *Purchase) GetDescription() string {
 	return p.Description
+}
+
+func (p *Purchase) GetOwnerId() uint {
+	return p.OwnerId
+}
+
+func (p *Purchase) SetOwnerId(ownerId uint) {
+	p.OwnerId = ownerId
+}
+
+func (p *Purchase) GetMembers() []string {
+	return nil
 }
 
 func (p *Purchase) SetValue(step Step, value string) error {

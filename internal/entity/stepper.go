@@ -12,5 +12,6 @@ const (
 	Ingredients
 	Actions
 	Complexity
+	Members
 	End
 )

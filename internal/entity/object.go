@@ -1,5 +1,6 @@
 package entity
 
+// Object todo: redo interface, very bad
 type Object interface {
 	GetName() string
 	GetId() uint
@@ -11,6 +12,8 @@ type Object interface {
 	GetIngredients() string
 	GetActions() string
 	GetComplexity() uint8
+	GetOwnerId() uint
+	GetMembers() []string
 	SetValue(step Step, value string) error
 	ToString() string
 }

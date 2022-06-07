@@ -10,6 +10,7 @@ type Product struct {
 	Id         uint
 	Name       string
 	TotalCount uint8
+	OwnerId    uint
 }
 
 func (p *Product) ToString() string {
@@ -28,6 +29,14 @@ func (p *Product) GetCount() uint {
 	return uint(p.TotalCount)
 }
 
+func (p *Product) GetOwnerId() uint {
+	return p.OwnerId
+}
+
+func (p *Product) SetOwnerId(ownerId uint) {
+	p.OwnerId = ownerId
+}
+
 func (p *Product) GetDescription() string {
 	return ""
 }
@@ -42,6 +51,10 @@ func (p *Product) GetPrice() uint64 {
 
 func (p *Product) GetCreatedAt() int64 {
 	return 0
+}
+
+func (p *Product) GetMembers() []string {
+	return nil
 }
 
 func (p *Product) GetIngredients() string {

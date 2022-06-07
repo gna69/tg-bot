@@ -19,6 +19,7 @@ func toPurchasesList(rows pgx.Rows) ([]entity.Object, error) {
 			&purchase.Unit,
 			&purchase.Price,
 			&purchase.CreatedAt,
+			&purchase.OwnerId,
 		)
 		if err != nil {
 			return nil, err
@@ -36,7 +37,7 @@ func toProductsList(rows pgx.Rows) ([]entity.Object, error) {
 
 	for rows.Next() {
 		var product entity.Product
-		err = rows.Scan(&product.Id, &product.Name, &product.TotalCount)
+		err = rows.Scan(&product.Id, &product.Name, &product.TotalCount, &product.OwnerId)
 		if err != nil {
 			return nil, err
 		}
@@ -60,6 +61,7 @@ func toRecipesList(rows pgx.Rows) ([]entity.Object, error) {
 			&recipe.Ingredients,
 			&recipe.Actions,
 			&recipe.Complexity,
+			&recipe.OwnerId,
 		)
 		if err != nil {
 			return nil, err

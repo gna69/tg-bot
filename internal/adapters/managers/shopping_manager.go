@@ -15,7 +15,7 @@ func NewShoppingManager(conn *pgx.Conn) *ShoppingManager {
 }
 
 func (sm *ShoppingManager) Add(ctx context.Context, purchase entity.Object) error {
-	query := `INSERT INTO purchases (name, description, count, unit, price, created_at) VALUES ($1, $2, $3, $4, $5, to_timestamp($6));`
+	query := `INSERT INTO purchases (name, description, count, unit, price, created_at, owner_id) VALUES ($1, $2, $3, $4, $5, to_timestamp($6), $7);`
 	_, err := sm.conn.Exec(
 		ctx,
 		query,
@@ -25,6 +25,7 @@ func (sm *ShoppingManager) Add(ctx context.Context, purchase entity.Object) erro
 		purchase.GetUnit(),
 		purchase.GetPrice(),
 		purchase.GetCreatedAt(),
+		purchase.GetOwnerId(),
 	)
 	if err != nil {
 		return err
@@ -59,11 +60,11 @@ func (sm *ShoppingManager) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (sm *ShoppingManager) Get(ctx context.Context, id uint) (entity.Object, error) {
-	query := `SELECT * FROM purchases WHERE id=$1;`
+func (sm *ShoppingManager) Get(ctx context.Context, id uint, ownerId uint) (entity.Object, error) {
+	query := `SELECT * FROM purchases WHERE id=$1 AND owner_id=$2;`
 	purchase := &entity.Purchase{}
 
-	row := sm.conn.QueryRow(ctx, query, id)
+	row := sm.conn.QueryRow(ctx, query, id, ownerId)
 	err := row.Scan(
 		&purchase.Id,
 		&purchase.Name,
@@ -80,11 +81,11 @@ func (sm *ShoppingManager) Get(ctx context.Context, id uint) (entity.Object, err
 	return purchase, nil
 }
 
-func (sm *ShoppingManager) GetAll(ctx context.Context) ([]entity.Object, error) {
-	query := `SELECT * FROM purchases;`
+func (sm *ShoppingManager) GetAll(ctx context.Context, ownerId uint) ([]entity.Object, error) {
+	query := `SELECT * FROM purchases WHERE owner_id=$1;`
 	var purchases []entity.Object
 
-	rows, err := sm.conn.Query(ctx, query)
+	rows, err := sm.conn.Query(ctx, query, ownerId)
 	if err != nil {
 		return nil, err
 	}

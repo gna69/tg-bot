@@ -15,6 +15,18 @@ func (bot *TgBot) start(chat *tgbotapi.Chat) {
 	log.Debug().Msg("Starting bot")
 }
 
+func (bot *TgBot) groupsMode(chat *tgbotapi.Chat) {
+	groupsStepper, err := stepper.New(usecases.GroupsSteps)
+	if err != nil {
+		return
+	}
+
+	bot.stepper = groupsStepper
+	bot.command.Object = &entity.Group{OwnerId: bot.command.GetCurrentUser()}
+	bot.changeMode(entity.Groups, GroupsBanner, chat)
+	logChangeMode(entity.Groups)
+}
+
 func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 	shoppingStepper, err := stepper.New(usecases.ShoppingSteps)
 	if err != nil {
@@ -22,8 +34,9 @@ func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 	}
 
 	bot.stepper = shoppingStepper
+	bot.command.Object = &entity.Purchase{OwnerId: bot.command.GetCurrentUser()}
 	bot.changeMode(entity.Shopping, ShoppingBanner, chat)
-	log.Debug().Msgf("Setting mode to %s", entity.Shopping)
+	logChangeMode(entity.Shopping)
 }
 
 func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
@@ -33,8 +46,9 @@ func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
 	}
 
 	bot.stepper = productsStepper
+	bot.command.Object = &entity.Product{OwnerId: bot.command.GetCurrentUser()}
 	bot.changeMode(entity.Products, ProductsBanner, chat)
-	log.Debug().Msgf("Setting mode to %s", entity.Products)
+	logChangeMode(entity.Products)
 }
 
 func (bot *TgBot) recipesMode(chat *tgbotapi.Chat) {
@@ -44,8 +58,9 @@ func (bot *TgBot) recipesMode(chat *tgbotapi.Chat) {
 	}
 
 	bot.stepper = recipesStepper
+	bot.command.Object = &entity.Recipe{OwnerId: bot.command.GetCurrentUser()}
 	bot.changeMode(entity.Recipes, RecipesBanner, chat)
-	log.Debug().Msgf("Setting mode to %s", entity.Recipes)
+	logChangeMode(entity.Recipes)
 }
 
 func (bot *TgBot) workoutsMode(chat *tgbotapi.Chat) {
@@ -55,6 +70,10 @@ func (bot *TgBot) workoutsMode(chat *tgbotapi.Chat) {
 func (bot *TgBot) changeMode(mode string, message string, chat *tgbotapi.Chat) {
 	bot.disableChangesMode()
 	bot.command.SetCommand(mode)
-	bot.manager = pg.NewManager(mode, bot.db)
+	bot.manager = pg.NewManager(mode, bot.db, bot.authCli)
 	bot.sendMessage(chat.ID, message)
+}
+
+func logChangeMode(mode string) {
+	log.Debug().Msgf("Setting mode to %s", mode)
 }

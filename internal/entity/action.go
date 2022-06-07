@@ -8,4 +8,5 @@ const (
 	Add
 	Change
 	Delete
+	RemoveMember
 )

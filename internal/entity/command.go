@@ -2,6 +2,7 @@ package entity
 
 const (
 	Start    = "/start"
+	Groups   = "/groups"
 	Shopping = "/shopping"
 	Products = "/products"
 	Recipes  = "/recipes"
@@ -11,6 +12,7 @@ const (
 type Command struct {
 	command         string
 	action          Action
+	currentUser     uint
 	Object          Object
 	workingObjectId uint
 }
@@ -28,6 +30,14 @@ func (c *Command) GetCommand() string {
 
 func (c *Command) SetCommand(command string) {
 	c.command = command
+}
+
+func (c *Command) GetCurrentUser() uint {
+	return c.currentUser
+}
+
+func (c *Command) SetCurrentUser(id uint) {
+	c.currentUser = id
 }
 
 func (c *Command) GetAction() Action {

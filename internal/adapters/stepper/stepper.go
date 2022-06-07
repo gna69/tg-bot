@@ -73,6 +73,8 @@ func (s *Stepper) StepInfo() string {
 		return "Введите последовательность действий"
 	case entity.Complexity:
 		return "Введите сложность рецепта по 5ти бальной шкале"
+	case entity.Members:
+		return "Введите имена пользователей, которых хотите добавить в группу (например: user1, user2, user3)"
 	}
 	return ""
 }

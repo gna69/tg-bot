@@ -15,8 +15,8 @@ func NewProductsManager(conn *pgx.Conn) *ProductsManager {
 }
 
 func (pm *ProductsManager) Add(ctx context.Context, product entity.Object) error {
-	query := `INSERT INTO products (name, total_count) VALUES ($1, $2);`
-	_, err := pm.conn.Exec(ctx, query, product.GetName(), product.GetCount())
+	query := `INSERT INTO products (name, total_count, owner_id) VALUES ($1, $2, $3);`
+	_, err := pm.conn.Exec(ctx, query, product.GetName(), product.GetCount(), product.GetOwnerId())
 	return err
 }
 
@@ -32,11 +32,11 @@ func (pm *ProductsManager) Delete(ctx context.Context, id uint) error {
 	return err
 }
 
-func (pm *ProductsManager) Get(ctx context.Context, id uint) (entity.Object, error) {
-	query := `SELECT * FROM products WHERE id=$1;`
+func (pm *ProductsManager) Get(ctx context.Context, id uint, ownerId uint) (entity.Object, error) {
+	query := `SELECT * FROM products WHERE id=$1 AND owner_id=$2;`
 	product := &entity.Product{}
 
-	row := pm.conn.QueryRow(ctx, query, id)
+	row := pm.conn.QueryRow(ctx, query, id, ownerId)
 	err := row.Scan(&product.Id, &product.Name, &product.TotalCount)
 	if err != nil {
 		return nil, err
@@ -45,11 +45,11 @@ func (pm *ProductsManager) Get(ctx context.Context, id uint) (entity.Object, err
 	return product, nil
 }
 
-func (pm *ProductsManager) GetAll(ctx context.Context) ([]entity.Object, error) {
-	query := `SELECT * FROM products;`
+func (pm *ProductsManager) GetAll(ctx context.Context, ownerId uint) ([]entity.Object, error) {
+	query := `SELECT * FROM products WHERE owner_id = $1;`
 	var products []entity.Object
 
-	rows, err := pm.conn.Query(ctx, query)
+	rows, err := pm.conn.Query(ctx, query, ownerId)
 	if err != nil {
 		return nil, err
 	}

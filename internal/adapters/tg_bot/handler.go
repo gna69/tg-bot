@@ -21,6 +21,10 @@ const (
 func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 
+	if bot.command.GetCommand() == entity.Start {
+		return
+	}
+
 	if bot.command.GetAction() == entity.Nothing {
 		err := bot.setAction(message)
 		if err != nil {
@@ -76,6 +80,8 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		}
 
 		bot.disableChangesMode()
+	case entity.RemoveMember:
+		fallthrough
 	default:
 		bot.sendMessage(chatId, usecases.ErrNoOption.Error())
 		return
@@ -108,7 +114,7 @@ func toString(objs []entity.Object) string {
 }
 
 func (bot *TgBot) showAll(ctx context.Context) string {
-	result, err := bot.manager.GetAll(ctx)
+	result, err := bot.manager.GetAll(ctx, bot.command.GetCurrentUser())
 	if err != nil {
 		return err.Error()
 	}
@@ -137,7 +143,7 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 }
 
 func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
-	updatingObject, err := bot.manager.Get(ctx, bot.command.GetWorkingObjectId())
+	updatingObject, err := bot.manager.Get(ctx, bot.command.GetWorkingObjectId(), bot.command.GetCurrentUser())
 	if err != nil {
 		return err
 	}

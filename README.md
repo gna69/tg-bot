@@ -36,7 +36,7 @@ This is timetable of your workouts.
 User can add new workout, update or delete existing and get all workouts.
 
 # Commands in tg
-
+groups - Группы
 shopping - Режим покупок
 products - Список продуктов
 recipes - Рецептики
