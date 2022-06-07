@@ -99,6 +99,8 @@ func (s *Stepper) UpdatingInfo() string {
 			info += fmt.Sprintf("%d) Последовательность действий. \n", idx)
 		case entity.Complexity:
 			info += fmt.Sprintf("%d) Сложность.\n", idx)
+		case entity.Members:
+			info += fmt.Sprintf("%d) Члены группы.\n", idx)
 		}
 	}
 	return info

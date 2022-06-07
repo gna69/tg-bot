@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"errors"
+
 	"github.com/gna69/tg-bot/internal/entity"
 	pb "github.com/gna69/tg-bot/proto"
 )
@@ -9,6 +11,10 @@ import (
 type GroupsManager struct {
 	client pb.AuthServiceClient
 }
+
+var (
+	ErrNoGroup = errors.New("Нет такой группы!")
+)
 
 func NewGroupsManager(client pb.AuthServiceClient) *GroupsManager {
 	return &GroupsManager{client: client}
@@ -23,8 +29,14 @@ func (gm *GroupsManager) Add(ctx context.Context, group entity.Object) error {
 	return err
 }
 
-func (gm *GroupsManager) Update(ctx context.Context, groupId entity.Object) error {
-	return nil
+func (gm *GroupsManager) Update(ctx context.Context, group entity.Object) error {
+	groupMembers := group.GetMembers()
+	_, err := gm.client.AddToGroup(ctx, &pb.GroupRequest{
+		AddingUser:  groupMembers[len(groupMembers)-1],
+		InitiatorId: int32(group.GetOwnerId()),
+		GroupId:     int32(group.GetId()),
+	})
+	return err
 }
 
 func (gm *GroupsManager) Delete(ctx context.Context, groupId uint) error {
@@ -33,7 +45,18 @@ func (gm *GroupsManager) Delete(ctx context.Context, groupId uint) error {
 }
 
 func (gm *GroupsManager) Get(ctx context.Context, groupId uint, ownerId uint) (entity.Object, error) {
-	return nil, nil
+	groups, err := gm.GetAll(ctx, ownerId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, group := range groups {
+		if group.GetId() == groupId {
+			return group, nil
+		}
+	}
+
+	return nil, ErrNoGroup
 }
 
 func (gm *GroupsManager) GetAll(ctx context.Context, ownerId uint) ([]entity.Object, error) {
