@@ -47,11 +47,18 @@ func (rm *RecipesManager) Delete(ctx context.Context, id uint) error {
 	return err
 }
 
-func (rm *RecipesManager) Get(ctx context.Context, id uint, ownerId uint) (entity.Object, error) {
-	query := `SELECT * FROM recipes WHERE id=$1 AND owner_id=$2;`
+func (rm *RecipesManager) Get(ctx context.Context, id uint, ownerId uint, groups []int32) (entity.Object, error) {
+	query := `SELECT * FROM recipes WHERE id=$1 AND owner_id=$2`
+	query += getGroupsQuery(groups, 3)
+
+	args := []interface{}{id, ownerId}
+	for _, val := range groups {
+		args = append(args, val)
+	}
+
 	recipe := &entity.Recipe{}
 
-	row := rm.conn.QueryRow(ctx, query, id, ownerId)
+	row := rm.conn.QueryRow(ctx, query, args...)
 	err := row.Scan(
 		&recipe.Id,
 		&recipe.Name,
@@ -67,11 +74,18 @@ func (rm *RecipesManager) Get(ctx context.Context, id uint, ownerId uint) (entit
 	return recipe, nil
 }
 
-func (rm *RecipesManager) GetAll(ctx context.Context, ownerId uint) ([]entity.Object, error) {
-	query := `SELECT * FROM recipes WHERE owner_id = $1;`
+func (rm *RecipesManager) GetAll(ctx context.Context, ownerId uint, groups []int32) ([]entity.Object, error) {
+	query := `SELECT * FROM recipes WHERE owner_id = $1`
+	query += getGroupsQuery(groups, 2)
+
+	args := []interface{}{ownerId}
+	for _, val := range groups {
+		args = append(args, val)
+	}
+
 	var recipes []entity.Object
 
-	rows, err := rm.conn.Query(ctx, query, ownerId)
+	rows, err := rm.conn.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

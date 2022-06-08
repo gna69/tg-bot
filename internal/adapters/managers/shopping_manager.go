@@ -60,11 +60,18 @@ func (sm *ShoppingManager) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (sm *ShoppingManager) Get(ctx context.Context, id uint, ownerId uint) (entity.Object, error) {
-	query := `SELECT * FROM purchases WHERE id=$1 AND owner_id=$2;`
+func (sm *ShoppingManager) Get(ctx context.Context, id uint, ownerId uint, groups []int32) (entity.Object, error) {
+	query := `SELECT * FROM purchases WHERE id=$1 AND owner_id=$2`
+	query += getGroupsQuery(groups, 3)
+
+	args := []interface{}{id, ownerId}
+	for _, val := range groups {
+		args = append(args, val)
+	}
+
 	purchase := &entity.Purchase{}
 
-	row := sm.conn.QueryRow(ctx, query, id, ownerId)
+	row := sm.conn.QueryRow(ctx, query, args...)
 	err := row.Scan(
 		&purchase.Id,
 		&purchase.Name,
@@ -81,11 +88,17 @@ func (sm *ShoppingManager) Get(ctx context.Context, id uint, ownerId uint) (enti
 	return purchase, nil
 }
 
-func (sm *ShoppingManager) GetAll(ctx context.Context, ownerId uint) ([]entity.Object, error) {
-	query := `SELECT * FROM purchases WHERE owner_id=$1;`
+func (sm *ShoppingManager) GetAll(ctx context.Context, ownerId uint, groups []int32) ([]entity.Object, error) {
+	query := `SELECT * FROM purchases WHERE owner_id=$1`
+	query += getGroupsQuery(groups, 2)
 	var purchases []entity.Object
+	// todo: to query builder
+	args := []interface{}{ownerId}
+	for _, val := range groups {
+		args = append(args, val)
+	}
 
-	rows, err := sm.conn.Query(ctx, query, ownerId)
+	rows, err := sm.conn.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

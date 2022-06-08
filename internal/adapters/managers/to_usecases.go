@@ -1,9 +1,12 @@
 package managers
 
 import (
+	"fmt"
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/jackc/pgx/v4"
 )
+
+var groups []int
 
 func toPurchasesList(rows pgx.Rows) ([]entity.Object, error) {
 	var err error
@@ -20,6 +23,7 @@ func toPurchasesList(rows pgx.Rows) ([]entity.Object, error) {
 			&purchase.Price,
 			&purchase.CreatedAt,
 			&purchase.OwnerId,
+			&groups,
 		)
 		if err != nil {
 			return nil, err
@@ -37,7 +41,7 @@ func toProductsList(rows pgx.Rows) ([]entity.Object, error) {
 
 	for rows.Next() {
 		var product entity.Product
-		err = rows.Scan(&product.Id, &product.Name, &product.TotalCount, &product.OwnerId)
+		err = rows.Scan(&product.Id, &product.Name, &product.TotalCount, &product.OwnerId, &groups)
 		if err != nil {
 			return nil, err
 		}
@@ -62,6 +66,7 @@ func toRecipesList(rows pgx.Rows) ([]entity.Object, error) {
 			&recipe.Actions,
 			&recipe.Complexity,
 			&recipe.OwnerId,
+			&groups,
 		)
 		if err != nil {
 			return nil, err
@@ -71,4 +76,21 @@ func toRecipesList(rows pgx.Rows) ([]entity.Object, error) {
 	}
 
 	return recipes, nil
+}
+
+func getGroupsQuery(groups []int32, argIdx int) (query string) {
+	if len(groups) == 0 {
+		return ";"
+	}
+
+	query += fmt.Sprintf(` OR $%d = ANY ("groups") `, argIdx)
+	groups[0] = groups[len(groups)-1]
+	groups = groups[:len(groups)-1]
+
+	for range groups {
+		argIdx++
+		query += fmt.Sprintf(`OR $%d = ANY ("groups") `, argIdx)
+	}
+	query += ";"
+	return
 }

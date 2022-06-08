@@ -2,6 +2,7 @@ package tg_bot
 
 import (
 	"context"
+	"github.com/gna69/tg-bot/internal/adapters/synchronizer"
 	"reflect"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
@@ -14,16 +15,19 @@ import (
 )
 
 type TgBot struct {
-	api     *tgbotapi.BotAPI
-	db      *pgx.Conn
-	authCli pb.AuthServiceClient
-	context *botContext
+	api          *tgbotapi.BotAPI
+	db           *pgx.Conn
+	authCli      pb.AuthServiceClient
+	synchronizer usecases.Synchronizer
+	context      *botContext
 }
 
 type botContext struct {
-	command *entity.Command
-	manager usecases.Manager
-	stepper usecases.Stepper
+	command    *entity.Command
+	manager    usecases.Manager
+	stepper    usecases.Stepper
+	user       uint
+	userGroups []int32
 }
 
 var userContext map[int]botContext
@@ -37,13 +41,16 @@ func NewTelegramBot(token string, db *pgx.Conn, authCli pb.AuthServiceClient) (*
 	command := entity.NewCommand()
 	userContext = make(map[int]botContext)
 
+	s := synchronizer.NewSynchronizer(db)
+
 	return &TgBot{
 		api: api,
 		db:  db,
 		context: &botContext{
 			command: command,
 		},
-		authCli: authCli,
+		synchronizer: s,
+		authCli:      authCli,
 	}, nil
 }
 
@@ -59,7 +66,7 @@ func (bot *TgBot) Run(ctx context.Context) error {
 		}
 
 		user := message.Message.From
-		_, err := bot.authCli.AuthUser(ctx, &pb.User{
+		resp, err := bot.authCli.AuthUser(ctx, &pb.User{
 			Id:           int32(user.ID),
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
@@ -74,13 +81,22 @@ func (bot *TgBot) Run(ctx context.Context) error {
 		}
 
 		// todo: to redis
-		if uint(user.ID) != bot.context.command.GetCurrentUser() {
+		if uint(user.ID) != bot.context.user {
 			if userContext, ok := userContext[user.ID]; ok {
 				bot.context = &userContext
 			} else {
 				bot.context.command = entity.NewCommand()
 			}
-			bot.context.command.SetCurrentUser(uint(user.ID))
+			bot.context.user = uint(user.ID)
+		}
+
+		bot.context.userGroups = resp.UserGroups
+		err = bot.synchronizer.Synchronize(ctx, bot.context.userGroups, bot.context.user)
+		if err != nil {
+			log.Error().
+				Str("synchronizer", "error synchronize user data").
+				Err(err).
+				Send()
 		}
 
 		log.Debug().
@@ -89,7 +105,7 @@ func (bot *TgBot) Run(ctx context.Context) error {
 			Int("chatId", int(message.Message.Chat.ID)).
 			Str("chatTitle", message.Message.Chat.Title).
 			Str("from", message.Message.Chat.FirstName).Send()
-
+		//todo: remove
 		if user.ID != 712226067 && user.ID != 455932005 {
 			bot.sendMessage(message.Message.Chat.ID, "Я нахожусь на этапе разработки, приходи в июле)")
 			continue

@@ -32,12 +32,19 @@ func (pm *ProductsManager) Delete(ctx context.Context, id uint) error {
 	return err
 }
 
-func (pm *ProductsManager) Get(ctx context.Context, id uint, ownerId uint) (entity.Object, error) {
-	query := `SELECT * FROM products WHERE id=$1 AND owner_id=$2;`
+func (pm *ProductsManager) Get(ctx context.Context, id uint, ownerId uint, groups []int32) (entity.Object, error) {
+	query := `SELECT * FROM products WHERE id=$1 AND owner_id=$2`
+	query += getGroupsQuery(groups, 3)
+
+	args := []interface{}{id, ownerId}
+	for _, val := range groups {
+		args = append(args, val)
+	}
+
 	product := &entity.Product{}
 
-	row := pm.conn.QueryRow(ctx, query, id, ownerId)
-	err := row.Scan(&product.Id, &product.Name, &product.TotalCount)
+	row := pm.conn.QueryRow(ctx, query, args...)
+	err := row.Scan(&product.Id, &product.Name, &product.TotalCount, &product.OwnerId, &product.Groups)
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +52,17 @@ func (pm *ProductsManager) Get(ctx context.Context, id uint, ownerId uint) (enti
 	return product, nil
 }
 
-func (pm *ProductsManager) GetAll(ctx context.Context, ownerId uint) ([]entity.Object, error) {
-	query := `SELECT * FROM products WHERE owner_id = $1;`
+func (pm *ProductsManager) GetAll(ctx context.Context, ownerId uint, groups []int32) ([]entity.Object, error) {
+	query := `SELECT * FROM products WHERE owner_id = $1`
+	query += getGroupsQuery(groups, 2)
 	var products []entity.Object
 
-	rows, err := pm.conn.Query(ctx, query, ownerId)
+	args := []interface{}{ownerId}
+	for _, val := range groups {
+		args = append(args, val)
+	}
+
+	rows, err := pm.conn.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

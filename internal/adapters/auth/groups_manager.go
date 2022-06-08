@@ -44,8 +44,8 @@ func (gm *GroupsManager) Delete(ctx context.Context, groupId uint) error {
 	return err
 }
 
-func (gm *GroupsManager) Get(ctx context.Context, groupId uint, ownerId uint) (entity.Object, error) {
-	groups, err := gm.GetAll(ctx, ownerId)
+func (gm *GroupsManager) Get(ctx context.Context, groupId uint, ownerId uint, allowedGroups []int32) (entity.Object, error) {
+	groups, err := gm.GetAll(ctx, ownerId, allowedGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (gm *GroupsManager) Get(ctx context.Context, groupId uint, ownerId uint) (e
 	return nil, ErrNoGroup
 }
 
-func (gm *GroupsManager) GetAll(ctx context.Context, ownerId uint) ([]entity.Object, error) {
+func (gm *GroupsManager) GetAll(ctx context.Context, ownerId uint, _ []int32) ([]entity.Object, error) {
 	resp, err := gm.client.GetUserGroups(ctx, &pb.GroupsRequest{OwnerId: int32(ownerId)})
 	if err != nil {
 		return nil, err

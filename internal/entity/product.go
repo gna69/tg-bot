@@ -11,6 +11,7 @@ type Product struct {
 	Name       string
 	TotalCount uint8
 	OwnerId    uint
+	Groups     []int32
 }
 
 func (p *Product) ToString() string {

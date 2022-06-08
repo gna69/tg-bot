@@ -32,14 +32,6 @@ func (c *Command) SetCommand(command string) {
 	c.command = command
 }
 
-func (c *Command) GetCurrentUser() uint {
-	return c.currentUser
-}
-
-func (c *Command) SetCurrentUser(id uint) {
-	c.currentUser = id
-}
-
 func (c *Command) GetAction() Action {
 	return c.action
 }

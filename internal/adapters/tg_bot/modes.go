@@ -23,7 +23,7 @@ func (bot *TgBot) groupsMode(chat *tgbotapi.Chat) {
 	}
 
 	bot.context.stepper = groupsStepper
-	bot.context.command.Object = &entity.Group{OwnerId: bot.context.command.GetCurrentUser()}
+	bot.context.command.Object = &entity.Group{OwnerId: bot.context.user}
 	bot.changeMode(entity.Groups, GroupsBanner, chat)
 	logChangeMode(entity.Groups)
 }
@@ -35,7 +35,7 @@ func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 	}
 
 	bot.context.stepper = shoppingStepper
-	bot.context.command.Object = &entity.Purchase{OwnerId: bot.context.command.GetCurrentUser()}
+	bot.context.command.Object = &entity.Purchase{OwnerId: bot.context.user}
 	bot.changeMode(entity.Shopping, ShoppingBanner, chat)
 	logChangeMode(entity.Shopping)
 }
@@ -47,7 +47,7 @@ func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
 	}
 
 	bot.context.stepper = productsStepper
-	bot.context.command.Object = &entity.Product{OwnerId: bot.context.command.GetCurrentUser()}
+	bot.context.command.Object = &entity.Product{OwnerId: bot.context.user}
 	bot.changeMode(entity.Products, ProductsBanner, chat)
 	logChangeMode(entity.Products)
 }
@@ -59,7 +59,7 @@ func (bot *TgBot) recipesMode(chat *tgbotapi.Chat) {
 	}
 
 	bot.context.stepper = recipesStepper
-	bot.context.command.Object = &entity.Recipe{OwnerId: bot.context.command.GetCurrentUser()}
+	bot.context.command.Object = &entity.Recipe{OwnerId: bot.context.user}
 	bot.changeMode(entity.Recipes, RecipesBanner, chat)
 	logChangeMode(entity.Recipes)
 }

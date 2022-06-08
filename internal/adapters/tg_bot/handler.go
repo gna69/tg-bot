@@ -114,7 +114,7 @@ func toString(objs []entity.Object) string {
 }
 
 func (bot *TgBot) showAll(ctx context.Context) string {
-	result, err := bot.context.manager.GetAll(ctx, bot.context.command.GetCurrentUser())
+	result, err := bot.context.manager.GetAll(ctx, bot.context.user, bot.context.userGroups)
 	if err != nil {
 		return err.Error()
 	}
@@ -143,7 +143,7 @@ func (bot *TgBot) add(ctx context.Context, message string) error {
 }
 
 func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
-	updatingObject, err := bot.context.manager.Get(ctx, bot.context.command.GetWorkingObjectId(), bot.context.command.GetCurrentUser())
+	updatingObject, err := bot.context.manager.Get(ctx, bot.context.command.GetWorkingObjectId(), bot.context.user, bot.context.userGroups)
 	if err != nil {
 		return err
 	}
