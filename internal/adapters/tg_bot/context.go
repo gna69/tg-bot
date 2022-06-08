@@ -9,24 +9,24 @@ import (
 )
 
 func (bot *TgBot) enableChangesMode(ctx context.Context, infoMsg string, chat *tgbotapi.Chat) bool {
-	if !bot.stepper.IsChangingStep() {
+	if !bot.context.stepper.IsChangingStep() {
 		bot.sendMessage(chat.ID, infoMsg)
 		bot.sendMessage(chat.ID, bot.showAll(ctx))
-		bot.stepper.EnableChangingOption()
+		bot.context.stepper.EnableChangingOption()
 		return false
 	}
 	return true
 }
 
 func (bot *TgBot) disableChangesMode() {
-	bot.stepper.Reset()
-	bot.stepper.DisableChangingOption()
-	bot.command.SetAction(entity.Nothing)
-	bot.command.SetWorkingObjectId(0)
+	bot.context.stepper.Reset()
+	bot.context.stepper.DisableChangingOption()
+	bot.context.command.SetAction(entity.Nothing)
+	bot.context.command.SetWorkingObjectId(0)
 }
 
 func (bot *TgBot) setObjectId(message *tgbotapi.Message) bool {
-	if bot.command.GetWorkingObjectId() != 0 {
+	if bot.context.command.GetWorkingObjectId() != 0 {
 		return true
 	}
 
@@ -36,13 +36,13 @@ func (bot *TgBot) setObjectId(message *tgbotapi.Message) bool {
 		return false
 	}
 
-	bot.command.SetWorkingObjectId(uint(objId))
-	bot.sendMessage(message.Chat.ID, bot.stepper.UpdatingInfo())
+	bot.context.command.SetWorkingObjectId(uint(objId))
+	bot.sendMessage(message.Chat.ID, bot.context.stepper.UpdatingInfo())
 	return false
 }
 
 func (bot *TgBot) setUpdatedStep(message *tgbotapi.Message) bool {
-	if bot.stepper.CurrentStep() != entity.Waited {
+	if bot.context.stepper.CurrentStep() != entity.Waited {
 		return true
 	}
 
@@ -51,6 +51,6 @@ func (bot *TgBot) setUpdatedStep(message *tgbotapi.Message) bool {
 		bot.sendMessage(message.Chat.ID, err.Error())
 		return false
 	}
-	bot.sendMessage(message.Chat.ID, bot.stepper.StepInfo())
+	bot.sendMessage(message.Chat.ID, bot.context.stepper.StepInfo())
 	return false
 }

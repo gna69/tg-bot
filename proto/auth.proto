@@ -3,7 +3,7 @@ syntax = "proto3";
 option go_package = "github.com/gna69/bot-auth-service/proto";
 
 service AuthService {
-  rpc AuthUser(User) returns (Result) {}
+  rpc AuthUser(User) returns (AuthResponse) {}
   rpc GetUserGroups(GroupsRequest) returns (GroupsResponse) {}
 
   rpc CreateGroup(Group) returns (Result) {}
@@ -45,7 +45,11 @@ message Group {
 
 message Result {
   Status status = 1;
-  string token = 2;
+}
+
+message AuthResponse {
+  Status status = 1;
+  repeated int32 userGroups = 2;
 }
 
 enum Status {

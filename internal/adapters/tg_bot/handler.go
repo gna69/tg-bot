@@ -21,11 +21,11 @@ const (
 func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 
-	if bot.command.GetCommand() == entity.Start {
+	if bot.context.command.GetCommand() == entity.Start {
 		return
 	}
 
-	if bot.command.GetAction() == entity.Nothing {
+	if bot.context.command.GetAction() == entity.Nothing {
 		err := bot.setAction(message)
 		if err != nil {
 			bot.sendMessage(chatId, err.Error())
@@ -33,14 +33,14 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		}
 	}
 
-	switch bot.command.GetAction() {
+	switch bot.context.command.GetAction() {
 	case entity.ShowAll:
 		bot.sendMessage(chatId, bot.showAll(ctx))
-		bot.command.SetAction(entity.Nothing)
+		bot.context.command.SetAction(entity.Nothing)
 	case entity.Add:
-		if bot.stepper.CurrentStep() == entity.Waited {
-			bot.stepper.NextStep()
-			bot.sendMessage(chatId, bot.stepper.StepInfo())
+		if bot.context.stepper.CurrentStep() == entity.Waited {
+			bot.context.stepper.NextStep()
+			bot.sendMessage(chatId, bot.context.stepper.StepInfo())
 			return
 		}
 
@@ -50,7 +50,7 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 			return
 		}
 
-		bot.sendMessage(chatId, bot.stepper.StepInfo())
+		bot.sendMessage(chatId, bot.context.stepper.StepInfo())
 	case entity.Change:
 		if !bot.enableChangesMode(ctx, updatingInfo, message.Chat) {
 			return
@@ -87,7 +87,7 @@ func (bot *TgBot) handle(ctx context.Context, message *tgbotapi.Message) {
 		return
 	}
 
-	if bot.stepper.CurrentStep() == entity.Waited {
+	if bot.context.stepper.CurrentStep() == entity.Waited {
 		bot.sendMessage(chatId, successInfo)
 	}
 }
@@ -98,7 +98,7 @@ func (bot *TgBot) setAction(message *tgbotapi.Message) error {
 		return usecases.ErrNoOption
 	}
 
-	bot.command.SetAction(entity.Action(newAction))
+	bot.context.command.SetAction(entity.Action(newAction))
 	return nil
 }
 
@@ -114,7 +114,7 @@ func toString(objs []entity.Object) string {
 }
 
 func (bot *TgBot) showAll(ctx context.Context) string {
-	result, err := bot.manager.GetAll(ctx, bot.command.GetCurrentUser())
+	result, err := bot.context.manager.GetAll(ctx, bot.context.command.GetCurrentUser())
 	if err != nil {
 		return err.Error()
 	}
@@ -123,38 +123,38 @@ func (bot *TgBot) showAll(ctx context.Context) string {
 }
 
 func (bot *TgBot) add(ctx context.Context, message string) error {
-	err := bot.command.Object.SetValue(bot.stepper.CurrentStep(), message)
+	err := bot.context.command.Object.SetValue(bot.context.stepper.CurrentStep(), message)
 	if err != nil {
 		return err
 	}
-	bot.stepper.NextStep()
+	bot.context.stepper.NextStep()
 
-	if bot.stepper.CurrentStep() == entity.End {
-		err := bot.manager.Add(ctx, bot.command.Object)
+	if bot.context.stepper.CurrentStep() == entity.End {
+		err := bot.context.manager.Add(ctx, bot.context.command.Object)
 		if err != nil {
 			return err
 		}
 
-		bot.command.Object = nil
-		bot.stepper.Reset()
-		bot.command.SetAction(entity.Nothing)
+		bot.context.command.Object = nil
+		bot.context.stepper.Reset()
+		bot.context.command.SetAction(entity.Nothing)
 	}
 	return nil
 }
 
 func (bot *TgBot) update(ctx context.Context, message *tgbotapi.Message) error {
-	updatingObject, err := bot.manager.Get(ctx, bot.command.GetWorkingObjectId(), bot.command.GetCurrentUser())
+	updatingObject, err := bot.context.manager.Get(ctx, bot.context.command.GetWorkingObjectId(), bot.context.command.GetCurrentUser())
 	if err != nil {
 		return err
 	}
-	bot.command.Object = updatingObject
+	bot.context.command.Object = updatingObject
 
-	err = bot.command.Object.SetValue(bot.stepper.CurrentStep(), message.Text)
+	err = bot.context.command.Object.SetValue(bot.context.stepper.CurrentStep(), message.Text)
 	if err != nil {
 		return err
 	}
 
-	err = bot.manager.Update(ctx, bot.command.Object)
+	err = bot.context.manager.Update(ctx, bot.context.command.Object)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (bot *TgBot) delete(ctx context.Context, message *tgbotapi.Message) error {
 		return err
 	}
 
-	err = bot.manager.Delete(ctx, uint(objId))
+	err = bot.context.manager.Delete(ctx, uint(objId))
 	return err
 }
 
@@ -178,7 +178,7 @@ func (bot *TgBot) setUpdateInfo(message string) error {
 		return errors.New("Я не знаю таких данных, какие нужно изменить-то?")
 	}
 
-	err = bot.stepper.SetStep(uint(updatingInfo))
+	err = bot.context.stepper.SetStep(uint(updatingInfo))
 	if err != nil {
 		return err
 	}

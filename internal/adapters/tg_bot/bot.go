@@ -17,10 +17,16 @@ type TgBot struct {
 	api     *tgbotapi.BotAPI
 	db      *pgx.Conn
 	authCli pb.AuthServiceClient
+	context *botContext
+}
+
+type botContext struct {
 	command *entity.Command
 	manager usecases.Manager
 	stepper usecases.Stepper
 }
+
+var userContext map[int]botContext
 
 func NewTelegramBot(token string, db *pgx.Conn, authCli pb.AuthServiceClient) (*TgBot, error) {
 	api, err := tgbotapi.NewBotAPI(token)
@@ -29,12 +35,15 @@ func NewTelegramBot(token string, db *pgx.Conn, authCli pb.AuthServiceClient) (*
 	}
 
 	command := entity.NewCommand()
+	userContext = make(map[int]botContext)
 
 	return &TgBot{
-		api:     api,
-		db:      db,
+		api: api,
+		db:  db,
+		context: &botContext{
+			command: command,
+		},
 		authCli: authCli,
-		command: command,
 	}, nil
 }
 
@@ -64,7 +73,15 @@ func (bot *TgBot) Run(ctx context.Context) error {
 			continue
 		}
 
-		bot.command.SetCurrentUser(uint(user.ID))
+		// todo: to redis
+		if uint(user.ID) != bot.context.command.GetCurrentUser() {
+			if userContext, ok := userContext[user.ID]; ok {
+				bot.context = &userContext
+			} else {
+				bot.context.command = entity.NewCommand()
+			}
+			bot.context.command.SetCurrentUser(uint(user.ID))
+		}
 
 		log.Debug().
 			Int("messageId", message.Message.MessageID).
@@ -97,6 +114,8 @@ func (bot *TgBot) Run(ctx context.Context) error {
 				bot.handle(ctx, message.Message)
 			}
 		}
+
+		userContext[user.ID] = *bot.context
 	}
 
 	return nil

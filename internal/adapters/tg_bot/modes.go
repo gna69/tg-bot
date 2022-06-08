@@ -1,16 +1,17 @@
 package tg_bot
 
 import (
-	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"github.com/gna69/tg-bot/internal/adapters/pg"
 	"github.com/gna69/tg-bot/internal/adapters/stepper"
 	"github.com/gna69/tg-bot/internal/entity"
 	"github.com/gna69/tg-bot/internal/usecases"
+
+	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"github.com/rs/zerolog/log"
 )
 
 func (bot *TgBot) start(chat *tgbotapi.Chat) {
-	bot.command.SetCommand(entity.Start)
+	bot.context.command.SetCommand(entity.Start)
 	bot.sendMessage(chat.ID, WelcomeMessage)
 	log.Debug().Msg("Starting bot")
 }
@@ -21,8 +22,8 @@ func (bot *TgBot) groupsMode(chat *tgbotapi.Chat) {
 		return
 	}
 
-	bot.stepper = groupsStepper
-	bot.command.Object = &entity.Group{OwnerId: bot.command.GetCurrentUser()}
+	bot.context.stepper = groupsStepper
+	bot.context.command.Object = &entity.Group{OwnerId: bot.context.command.GetCurrentUser()}
 	bot.changeMode(entity.Groups, GroupsBanner, chat)
 	logChangeMode(entity.Groups)
 }
@@ -33,8 +34,8 @@ func (bot *TgBot) shoppingMode(chat *tgbotapi.Chat) {
 		return
 	}
 
-	bot.stepper = shoppingStepper
-	bot.command.Object = &entity.Purchase{OwnerId: bot.command.GetCurrentUser()}
+	bot.context.stepper = shoppingStepper
+	bot.context.command.Object = &entity.Purchase{OwnerId: bot.context.command.GetCurrentUser()}
 	bot.changeMode(entity.Shopping, ShoppingBanner, chat)
 	logChangeMode(entity.Shopping)
 }
@@ -45,8 +46,8 @@ func (bot *TgBot) productsMode(chat *tgbotapi.Chat) {
 		return
 	}
 
-	bot.stepper = productsStepper
-	bot.command.Object = &entity.Product{OwnerId: bot.command.GetCurrentUser()}
+	bot.context.stepper = productsStepper
+	bot.context.command.Object = &entity.Product{OwnerId: bot.context.command.GetCurrentUser()}
 	bot.changeMode(entity.Products, ProductsBanner, chat)
 	logChangeMode(entity.Products)
 }
@@ -57,8 +58,8 @@ func (bot *TgBot) recipesMode(chat *tgbotapi.Chat) {
 		return
 	}
 
-	bot.stepper = recipesStepper
-	bot.command.Object = &entity.Recipe{OwnerId: bot.command.GetCurrentUser()}
+	bot.context.stepper = recipesStepper
+	bot.context.command.Object = &entity.Recipe{OwnerId: bot.context.command.GetCurrentUser()}
 	bot.changeMode(entity.Recipes, RecipesBanner, chat)
 	logChangeMode(entity.Recipes)
 }
@@ -69,8 +70,8 @@ func (bot *TgBot) workoutsMode(chat *tgbotapi.Chat) {
 
 func (bot *TgBot) changeMode(mode string, message string, chat *tgbotapi.Chat) {
 	bot.disableChangesMode()
-	bot.command.SetCommand(mode)
-	bot.manager = pg.NewManager(mode, bot.db, bot.authCli)
+	bot.context.command.SetCommand(mode)
+	bot.context.manager = pg.NewManager(mode, bot.db, bot.authCli)
 	bot.sendMessage(chat.ID, message)
 }
 
