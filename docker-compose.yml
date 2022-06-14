@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  lists_db:
+    image: nikitos69/lists_db:latest
+    restart: on-failure
+    ports:
+      - 5432:5432
+
+  bot:
+    image: nikitos69/tgbot:latest
+    depends_on:
+      - lists_db
+    restart: always
+    environment:
+      INFO_LEVEL: "info"
+      BOT_TOKEN: ""
+      PG_HOST: lists_db
+      PG_USER: ""
+      PG_PASS: ""
+      DB_NAME: ""
+      PG_PORT: 0
+    ports:
+      - 8080:8080
+
+networks:
+  bot_network:
